@@ -5,6 +5,7 @@ import { envValidationSchema } from './config/env.validation.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { CategoriesModule } from './modules/categories/categories.module.js';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
       load: [configuration],
       validationSchema: envValidationSchema,
     }),
+    CategoriesModule,
     AuthModule,
     DatabaseModule,
     HealthModule,

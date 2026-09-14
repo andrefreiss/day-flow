@@ -5,8 +5,8 @@ categorias, visualização em calendário e um painel com o andamento do dia.
 
 ## Status
 
-Em desenvolvimento. A API tem cadastro, login e rotas protegidas. A interface
-web e o domínio de tarefas entram nas próximas etapas.
+Em desenvolvimento. A API tem cadastro, login, rotas protegidas e o CRUD de
+categorias. Tarefas, subtarefas e a interface web entram nas próximas etapas.
 
 ## Stack
 

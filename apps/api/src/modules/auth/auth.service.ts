@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import argon2 from 'argon2';
 import { PrismaService } from '../../database/prisma.service.js';
-import { Prisma } from '../../generated/prisma/client.js';
+import { isUniqueViolation } from '../../database/prisma-errors.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 
@@ -37,10 +37,10 @@ export class AuthService {
 
       return { user, token: await this.signToken(user.id) };
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException('Email já cadastrado');
+      }
+      {
         throw new ConflictException('Email já cadastrado');
       }
 
