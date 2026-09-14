@@ -5,15 +5,15 @@ categorias, visualização em calendário e um painel com o andamento do dia.
 
 ## Status
 
-Em desenvolvimento. A API já sobe com configuração de ambiente validada e um
-endpoint de health check. Persistência, autenticação e interface web entram nas
+Em desenvolvimento. A API sobe com configuração de ambiente validada, health
+check e conexão com o PostgreSQL. Autenticação e interface web entram nas
 próximas etapas.
 
 ## Stack
 
 - **Frontend** — React, TypeScript, Vite, Tailwind CSS, React Router
 - **Backend** — NestJS, TypeScript, API REST
-- **Banco** — PostgreSQL
+- **Banco** — PostgreSQL com Prisma
 - **Ferramentas** — pnpm, ESLint, Prettier, Vitest
 
 O Docker é usado apenas para subir o PostgreSQL em desenvolvimento; a aplicação
@@ -29,6 +29,7 @@ Node 24+, pnpm 12+ e Docker.
 pnpm install
 cp apps/api/.env.example apps/api/.env
 docker compose up -d
+pnpm --filter @day-flow/api db:migrate
 pnpm dev:api
 ```
 
@@ -43,17 +44,41 @@ curl http://localhost:3000/api/health
 O arquivo `apps/api/.env` nunca é versionado; o modelo está em
 `apps/api/.env.example`.
 
-| Variável     | Padrão        | O que faz                 |
-| ------------ | ------------- | ------------------------- |
-| `NODE_ENV`   | `development` | ambiente de execução      |
-| `PORT`       | `3000`        | porta da API              |
-| `API_PREFIX` | `api`         | prefixo de todas as rotas |
+| Variável       | Padrão        | O que faz                           |
+| -------------- | ------------- | ----------------------------------- |
+| `NODE_ENV`     | `development` | ambiente de execução                |
+| `PORT`         | `3000`        | porta da API                        |
+| `API_PREFIX`   | `api`         | prefixo de todas as rotas           |
+| `DATABASE_URL` | —             | conexão com o Postgres, obrigatória |
+
+## Banco de dados
+
+O `docker compose up -d` sobe um PostgreSQL local descartável, com as mesmas
+credenciais do `.env.example`.
+
+O arquivo `apps/api/prisma/schema.prisma` é a fonte única da verdade do banco:
+toda mudança de estrutura vira uma migration versionada, nunca um `ALTER TABLE`
+aplicado à mão. Quem clona o projeto chega ao mesmo estado aplicando as
+migrations.
+
+O Prisma Client é gerado em `apps/api/src/generated/` e **não é versionado** —
+o `postinstall` e o `build` o recriam a partir do schema.
+
+| Comando                             | O que faz                                  |
+| ----------------------------------- | ------------------------------------------ |
+| `pnpm -F @day-flow/api db:migrate`  | cria e aplica migration a partir do schema |
+| `pnpm -F @day-flow/api db:generate` | regenera o Prisma Client                   |
+| `pnpm -F @day-flow/api db:deploy`   | aplica migrations existentes (CI/produção) |
+| `pnpm -F @day-flow/api db:status`   | mostra migrations pendentes                |
+| `pnpm -F @day-flow/api db:studio`   | abre o Prisma Studio                       |
 
 ## Estrutura
 
 ```
 apps/api/            API NestJS
+  prisma/            schema e migrations
   src/config/        configuração e validação do ambiente
+  src/database/      conexão com o Postgres
   src/modules/       um módulo por domínio
   test/              testes end-to-end
 tsconfig.base.json   configuração de TypeScript compartilhada
@@ -67,7 +92,7 @@ docker-compose.yml   PostgreSQL de desenvolvimento
 | ------------------- | --------------------------------- |
 | `pnpm dev:api`      | sobe a API em modo watch          |
 | `pnpm test`         | testes unitários                  |
-| `pnpm test:e2e`     | testes end-to-end                 |
+| `pnpm test:e2e`     | testes end-to-end, exigem o banco |
 | `pnpm typecheck`    | verifica os tipos sem gerar build |
 | `pnpm lint`         | roda o ESLint em todo o monorepo  |
 | `pnpm format:check` | verifica a formatação             |
