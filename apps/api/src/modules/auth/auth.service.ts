@@ -68,14 +68,6 @@ export class AuthService {
     };
   }
 
-  private normalizeEmail(email: string): string {
-    return email.trim().toLowerCase();
-  }
-
-  private signToken(userId: string): Promise<string> {
-    return this.jwt.signAsync({ sub: userId });
-  }
-
   async findById(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -87,5 +79,13 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  private signToken(userId: string): Promise<string> {
+    return this.jwt.signAsync({ sub: userId });
   }
 }
