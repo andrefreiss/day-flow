@@ -5,9 +5,8 @@ categorias, visualização em calendário e um painel com o andamento do dia.
 
 ## Status
 
-Em desenvolvimento. A API sobe com configuração de ambiente validada, health
-check e conexão com o PostgreSQL. Autenticação e interface web entram nas
-próximas etapas.
+Em desenvolvimento. A API tem cadastro, login e rotas protegidas. A interface
+web e o domínio de tarefas entram nas próximas etapas.
 
 ## Stack
 
@@ -44,12 +43,34 @@ curl http://localhost:3000/api/health
 O arquivo `apps/api/.env` nunca é versionado; o modelo está em
 `apps/api/.env.example`.
 
-| Variável       | Padrão        | O que faz                           |
-| -------------- | ------------- | ----------------------------------- |
-| `NODE_ENV`     | `development` | ambiente de execução                |
-| `PORT`         | `3000`        | porta da API                        |
-| `API_PREFIX`   | `api`         | prefixo de todas as rotas           |
-| `DATABASE_URL` | —             | conexão com o Postgres, obrigatória |
+| Variável                 | Padrão        | O que faz                                          |
+| ------------------------ | ------------- | -------------------------------------------------- |
+| `NODE_ENV`               | `development` | ambiente de execução                               |
+| `PORT`                   | `3000`        | porta da API                                       |
+| `API_PREFIX`             | `api`         | prefixo de todas as rotas                          |
+| `DATABASE_URL`           | —             | conexão com o Postgres, obrigatória                |
+| `JWT_SECRET`             | —             | chave de assinatura do token, mínimo 32 caracteres |
+| `JWT_EXPIRES_IN_SECONDS` | `604800`      | validade do token e do cookie de sessão            |
+
+## Autenticação
+
+A sessão trafega num **cookie `httpOnly`**, não em `localStorage`: o JavaScript
+da página não consegue ler o token, então uma falha de XSS no frontend não
+expõe a sessão. O cookie usa `sameSite=lax` contra CSRF e só exige HTTPS em
+produção.
+
+As senhas são guardadas com **argon2id**, primeira escolha da OWASP hoje.
+
+O guard é global: **toda rota nasce protegida** e as públicas se declaram com
+`@Public()`. O caminho contrário — proteger uma a uma — falha em silêncio
+quando alguém esquece.
+
+| Rota                  | Acesso    | O que faz                     |
+| --------------------- | --------- | ----------------------------- |
+| `POST /auth/register` | público   | cria a conta e abre a sessão  |
+| `POST /auth/login`    | público   | abre a sessão                 |
+| `POST /auth/logout`   | protegido | encerra a sessão              |
+| `GET /auth/me`        | protegido | devolve o usuário autenticado |
 
 ## Banco de dados
 
