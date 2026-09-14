@@ -9,10 +9,14 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor(config: ConfigService) {
+    const connectionString = config.getOrThrow<string>('databaseUrl');
+    const schema = new URL(connectionString).searchParams.get('schema');
+
     super({
-      adapter: new PrismaPg({
-        connectionString: config.getOrThrow<string>('databaseUrl'),
-      }),
+      adapter: new PrismaPg(
+        { connectionString },
+        { schema: schema ?? undefined },
+      ),
     });
   }
 
