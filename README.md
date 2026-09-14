@@ -6,7 +6,7 @@ categorias, visualização em calendário e um painel com o andamento do dia.
 ## Status
 
 Em desenvolvimento. A API tem cadastro, login, rotas protegidas e o CRUD de
-categorias. Tarefas, subtarefas e a interface web entram nas próximas etapas.
+categorias e tarefas. Subtarefas e a interface web entram nas próximas etapas.
 
 ## Stack
 
@@ -71,6 +71,37 @@ quando alguém esquece.
 | `POST /auth/login`    | público   | abre a sessão                 |
 | `POST /auth/logout`   | protegido | encerra a sessão              |
 | `GET /auth/me`        | protegido | devolve o usuário autenticado |
+
+## Tarefas
+
+Uma tarefa tem título, descrição, data, horários, status, prioridade e uma
+categoria opcional. Concluir e reabrir são feitos pelo `PATCH` de `status` — o
+`completedAt` é calculado pelo servidor na transição, nunca enviado pelo
+cliente.
+
+| Rota                | O que faz                                               |
+| ------------------- | ------------------------------------------------------- |
+| `GET /tasks`        | lista, com filtros `from`, `to`, `status`, `categoryId` |
+| `POST /tasks`       | cria                                                    |
+| `GET /tasks/:id`    | detalha                                                 |
+| `PATCH /tasks/:id`  | atualiza, conclui e reabre                              |
+| `DELETE /tasks/:id` | remove                                                  |
+
+### Data e horário
+
+A `date` é uma coluna `date` pura e trafega como `"2026-09-20"`, sem instante.
+Os horários são texto `"HH:mm"`. É hora de parede: "academia às 07:00" continua
+às 07:00 independentemente do fuso de quem abre o aplicativo.
+
+Devolver a data como instante seria o caminho para o erro de data mais comum
+que existe — `new Date("2026-09-20T00:00:00.000Z")` renderiza 19 de setembro em
+qualquer fuso a oeste de Greenwich.
+
+### Categoria de outro usuário
+
+A chave estrangeira garante que a categoria existe, não que ela é sua. Por isso
+o serviço confere o dono antes de vincular: sem essa checagem, bastaria passar
+o id da categoria alheia.
 
 ## Banco de dados
 

@@ -9,6 +9,21 @@ datasource db {
   provider = "postgresql"
 }
 
+enum TaskStatus {
+  PENDING
+  DONE
+
+  @@map("task_status")
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+
+  @@map("task_priority")
+}
+
 model User {
   id           String     @id @default(uuid(7)) @db.Uuid
   email        String     @unique
@@ -17,6 +32,7 @@ model User {
   createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
   categories   Category[]
+  task         Task[]
 
   @@map("users")
 }
@@ -29,8 +45,31 @@ model Category {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task[]
 
   @@unique([userId, name])
   @@map("categories")
+}
+
+model Task {
+  id          String       @id @default(uuid(7)) @db.Uuid
+  userId      String       @map("user_id") @db.Uuid
+  categoryId  String?      @map("category_id") @db.Uuid
+  title       String
+  description String?
+  date        DateTime     @db.Date
+  startTime   String?      @map("start_time")
+  endTime     String?      @map("end_time")
+  status      TaskStatus   @default(PENDING)
+  priority    TaskPriority @default(MEDIUM)
+  completedAt DateTime?    @map("completed_at") @db.Timestamptz(3)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([userId, date])
+  @@map("tasks")
 }
