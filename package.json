@@ -1,0 +1,17 @@
+{
+  "name": "day-flow",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aplicação web para organização e acompanhamento da rotina diária",
+  "type": "module",
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=12"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
+}
