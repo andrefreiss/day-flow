@@ -118,3 +118,18 @@ docker-compose.yml   PostgreSQL de desenvolvimento
 | `pnpm lint`         | roda o ESLint em todo o monorepo  |
 | `pnpm format:check` | verifica a formatação             |
 | `pnpm build`        | compila a aplicação               |
+
+## Testes
+
+Os testes end-to-end rodam num **schema separado** (`test`) do mesmo
+PostgreSQL, definido em `DATABASE_TEST_URL`. É por isso que eles podem limpar
+as tabelas à vontade sem apagar os dados do seu desenvolvimento.
+
+O `pnpm test:e2e` aplica as migrations no schema de teste antes de rodar, então
+não há passo manual. Os arquivos rodam em série: eles compartilham um banco, e
+em paralelo se sabotariam.
+
+Uma sutileza do Prisma 7 que essa separação expõe: o `?schema=` da URL é
+convenção do CLI, e o driver adapter o ignora. Por isso o `PrismaService` lê o
+schema da URL e o passa explicitamente ao adapter — sem isso, as migrations vão
+para um schema e a aplicação escreve noutro.
