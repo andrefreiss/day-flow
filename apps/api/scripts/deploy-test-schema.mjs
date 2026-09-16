@@ -12,7 +12,15 @@ if (!url) {
   process.exit(1);
 }
 
-execSync('prisma migrate deploy', {
-  stdio: 'inherit',
-  env: { ...process.env, DATABASE_URL: url },
-});
+try {
+  execSync('prisma migrate deploy', {
+    stdio: 'inherit',
+    env: { ...process.env, DATABASE_URL: url },
+  });
+} catch {
+  console.error('\nNão foi possível aplicar as migrations no banco de testes.');
+  console.error(
+    'Confirme se o PostgreSQL está disponível e execute "docker compose up -d".',
+  );
+  process.exit(1);
+}
