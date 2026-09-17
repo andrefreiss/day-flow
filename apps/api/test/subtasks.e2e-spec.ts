@@ -138,8 +138,13 @@ describe('Subtasks', () => {
       .set('Cookie', dono)
       .expect(200);
 
-    expect(response.body).toHaveLength(1);
-    expect(response.body[0]).toMatchObject({
+    const subtarefas = response.body as {
+      id: string;
+      title: string;
+    }[];
+
+    expect(subtarefas).toHaveLength(1);
+    expect(subtarefas[0]).toMatchObject({
       id: subtarefaId,
       title: 'Revisar tipos',
     });
