@@ -6,7 +6,8 @@ categorias, visualização em calendário e um painel com o andamento do dia.
 ## Status
 
 Em desenvolvimento. A API tem cadastro, login, rotas protegidas e o CRUD de
-categorias e tarefas. Subtarefas e a interface web entram nas próximas etapas.
+categorias, tarefas e subtarefas. O dashboard e a interface web entram nas
+próximas etapas.
 
 ## Stack
 
@@ -102,6 +103,22 @@ qualquer fuso a oeste de Greenwich.
 A chave estrangeira garante que a categoria existe, não que ela é sua. Por isso
 o serviço confere o dono antes de vincular: sem essa checagem, bastaria passar
 o id da categoria alheia.
+
+## Subtarefas
+
+Cada subtarefa pertence a uma tarefa e nasce pendente. O dono não é duplicado
+na tabela de subtarefas: a autorização é herdada da tarefa, que precisa pertencer
+ao usuário autenticado em todas as operações.
+
+| Rota                                 | O que faz |
+| ------------------------------------ | --------- |
+| `GET /tasks/:taskId/subtasks`        | lista     |
+| `POST /tasks/:taskId/subtasks`       | cria      |
+| `GET /tasks/:taskId/subtasks/:id`    | detalha   |
+| `PATCH /tasks/:taskId/subtasks/:id`  | atualiza  |
+| `DELETE /tasks/:taskId/subtasks/:id` | remove    |
+
+Ao remover uma tarefa, o banco também remove suas subtarefas por cascata.
 
 ## Banco de dados
 
