@@ -5,4 +5,5 @@ export default () => ({
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresInSeconds: Number(process.env.JWT_EXPIRES_IN_SECONDS),
+  webOrigin: process.env.WEB_ORIGIN,
 });
