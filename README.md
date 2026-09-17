@@ -6,8 +6,8 @@ categorias, visualização em calendário e um painel com o andamento do dia.
 ## Status
 
 Em desenvolvimento. A API tem cadastro, login, rotas protegidas e o CRUD de
-categorias, tarefas e subtarefas. O dashboard e a interface web entram nas
-próximas etapas.
+categorias, tarefas e subtarefas, além do endpoint de dashboard. A interface web
+entra na próxima etapa.
 
 ## Stack
 
@@ -119,6 +119,21 @@ ao usuário autenticado em todas as operações.
 | `DELETE /tasks/:taskId/subtasks/:id` | remove    |
 
 Ao remover uma tarefa, o banco também remove suas subtarefas por cascata.
+
+## Dashboard
+
+O dashboard recebe uma data de referência no formato `YYYY-MM-DD`. A data vem
+do cliente para representar corretamente o calendário local do usuário, sem
+depender do fuso do servidor.
+
+| Rota                   | O que faz                                 |
+| ---------------------- | ----------------------------------------- |
+| `GET /dashboard?date=` | devolve as métricas da data de referência |
+
+A resposta contém as tarefas concluídas e pendentes do dia, a quantidade de
+tarefas atrasadas, as próximas tarefas pendentes e o percentual de progresso.
+As contagens são calculadas pelo PostgreSQL por meio do Prisma, sem carregar
+todas as tarefas na memória da aplicação.
 
 ## Banco de dados
 
