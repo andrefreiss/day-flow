@@ -6,6 +6,7 @@ import { HealthModule } from './modules/health/health.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { CategoriesModule } from './modules/categories/categories.module.js';
+import { SubtasksModule } from './modules/subtasks/subtasks.module.js';
 import { TasksModule } from './modules/tasks/tasks.module.js';
 
 @Module({
@@ -15,6 +16,7 @@ import { TasksModule } from './modules/tasks/tasks.module.js';
       load: [configuration],
       validationSchema: envValidationSchema,
     }),
+    SubtasksModule,
     TasksModule,
     CategoriesModule,
     AuthModule,
