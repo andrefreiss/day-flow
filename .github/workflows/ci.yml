@@ -17,6 +17,7 @@ jobs:
       DATABASE_URL: postgresql://dayflow:dayflow@localhost:5432/dayflow?schema=public
       DATABASE_TEST_URL: postgresql://dayflow:dayflow@localhost:5432/dayflow?schema=test
       JWT_SECRET: ci-secret-with-at-least-32-characters
+      WEB_ORIGIN: http://localhost:5173
     services:
       postgres:
         image: postgres:18-alpine
