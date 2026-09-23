@@ -4,6 +4,7 @@ import { ProtectedRoute } from './features/auth/protected-route.tsx';
 import { LoginPage } from './pages/login-page.tsx';
 import { NotFoundPage } from './pages/not-found-page.tsx';
 import { TodayPage } from './pages/today-page.tsx';
+import { RegisterPage } from './pages/register-page.tsx';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
       </Route>
       <Route element={<GuestRoute />}>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
