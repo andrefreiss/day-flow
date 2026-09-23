@@ -6,6 +6,8 @@ import {
   type DashboardSummary,
 } from '../features/dashboard/dashboard-api.ts';
 import { formatLocalDate } from '../lib/date.ts';
+import { TaskForm } from '../features/tasks/task-form.tsx';
+import { TasksList } from '../features/tasks/tasks-list.tsx';
 
 type DashboardState =
   | { status: 'loading' }
@@ -16,11 +18,16 @@ export function TodayPage() {
   const user = useOutletContext<User>();
   const navigate = useNavigate();
   const [referenceDate] = useState(() => formatLocalDate(new Date()));
+  const [refreshKey, setRefreshKey] = useState(0);
   const [dashboard, setDashboard] = useState<DashboardState>({
     status: 'loading',
   });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
+
+  function handleTasksChanged(): void {
+    setRefreshKey((value) => value + 1);
+  }
 
   useEffect(() => {
     let active = true;
@@ -50,7 +57,7 @@ export function TodayPage() {
     return () => {
       active = false;
     };
-  }, [referenceDate]);
+  }, [referenceDate, refreshKey]);
 
   async function handleLogout(): Promise<void> {
     setLogoutError(null);
@@ -193,6 +200,12 @@ export function TodayPage() {
             </section>
           </>
         ) : null}
+        <TaskForm date={referenceDate} onCreated={handleTasksChanged} />
+        <TasksList
+          date={referenceDate}
+          onChanged={handleTasksChanged}
+          refreshKey={refreshKey}
+        />
       </div>
     </main>
   );
