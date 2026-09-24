@@ -19,7 +19,7 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsString()
   @MaxLength(2000)
-  description?: string;
+  description?: string | null;
 
   @IsOptional()
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
@@ -27,11 +27,11 @@ export class UpdateTaskDto {
 
   @IsOptional()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
-  startTime?: string;
+  startTime?: string | null;
 
   @IsOptional()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
-  endTime?: string;
+  endTime?: string | null;
 
   @IsOptional()
   @IsEnum(TaskStatus)
@@ -43,5 +43,5 @@ export class UpdateTaskDto {
 
   @IsOptional()
   @IsUUID()
-  categoryId?: string;
+  categoryId?: string | null;
 }

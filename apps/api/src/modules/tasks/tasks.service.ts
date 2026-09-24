@@ -77,8 +77,8 @@ export class TasksService {
     }
 
     this.assertTimeRange(
-      dto.startTime ?? current.startTime,
-      dto.endTime ?? current.endTime,
+      dto.startTime === undefined ? current.startTime : dto.startTime,
+      dto.endTime === undefined ? current.endTime : dto.endTime,
     );
     await this.assertCategoryBelongsToUser(userId, dto.categoryId);
 
@@ -87,7 +87,7 @@ export class TasksService {
       data: {
         categoryId: dto.categoryId,
         title: dto.title?.trim(),
-        description: dto.description?.trim(),
+        description: dto.description === null ? null : dto.description?.trim(),
         date: dto.date ? toDateColumn(dto.date) : undefined,
         startTime: dto.startTime,
         endTime: dto.endTime,
@@ -136,7 +136,7 @@ export class TasksService {
 
   private async assertCategoryBelongsToUser(
     userId: string,
-    categoryId?: string,
+    categoryId?: string | null,
   ): Promise<void> {
     if (!categoryId) {
       return;
