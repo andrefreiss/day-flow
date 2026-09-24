@@ -1,19 +1,27 @@
 import { useState, type FormEvent } from 'react';
+import type { Category } from '../categories/categories-api.ts';
 import { createTask, type TaskPriority } from './tasks-api.ts';
 
 type TaskFormProps = {
+  categories: Category[];
   date: string;
   onCreated: () => void;
 };
 
-export function TaskForm({ date, onCreated }: TaskFormProps) {
+export function TaskForm({ categories, date, onCreated }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('MEDIUM');
+  const [categoryId, setCategoryId] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const selectedCategoryId = categories.some(
+    (category) => category.id === categoryId,
+  )
+    ? categoryId
+    : '';
 
   async function submitTask(): Promise<void> {
     const normalizedTitle = title.trim();
@@ -44,6 +52,7 @@ export function TaskForm({ date, onCreated }: TaskFormProps) {
         startTime: startTime || undefined,
         endTime: endTime || undefined,
         priority,
+        categoryId: selectedCategoryId || undefined,
       });
 
       setTitle('');
@@ -51,6 +60,7 @@ export function TaskForm({ date, onCreated }: TaskFormProps) {
       setStartTime('');
       setEndTime('');
       setPriority('MEDIUM');
+      setCategoryId('');
       onCreated();
     } catch (error: unknown) {
       setErrorMessage(
@@ -159,24 +169,55 @@ export function TaskForm({ date, onCreated }: TaskFormProps) {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium" htmlFor="task-priority">
-            Prioridade
-          </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label
+              className="block text-sm font-medium"
+              htmlFor="task-category"
+            >
+              Categoria
+            </label>
 
-          <select
-            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100"
-            disabled={isSubmitting}
-            id="task-priority"
-            onChange={(event) => {
-              setPriority(event.target.value as TaskPriority);
-            }}
-            value={priority}
-          >
-            <option value="LOW">Baixa</option>
-            <option value="MEDIUM">Média</option>
-            <option value="HIGH">Alta</option>
-          </select>
+            <select
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100"
+              disabled={isSubmitting}
+              id="task-category"
+              onChange={(event) => {
+                setCategoryId(event.target.value);
+              }}
+              value={selectedCategoryId}
+            >
+              <option value="">Sem categoria</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              className="block text-sm font-medium"
+              htmlFor="task-priority"
+            >
+              Prioridade
+            </label>
+
+            <select
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100"
+              disabled={isSubmitting}
+              id="task-priority"
+              onChange={(event) => {
+                setPriority(event.target.value as TaskPriority);
+              }}
+              value={priority}
+            >
+              <option value="LOW">Baixa</option>
+              <option value="MEDIUM">Média</option>
+              <option value="HIGH">Alta</option>
+            </select>
+          </div>
         </div>
 
         {errorMessage ? (

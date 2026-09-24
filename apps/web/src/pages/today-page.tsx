@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router';
 import { logout, type User } from '../features/auth/auth-api.ts';
 import {
+  getCategories,
+  type Category,
+} from '../features/categories/categories-api.ts';
+import { CategoriesPanel } from '../features/categories/categories-panel.tsx';
+import {
   getDashboard,
   type DashboardSummary,
 } from '../features/dashboard/dashboard-api.ts';
@@ -14,12 +19,21 @@ type DashboardState =
   | { status: 'error'; message: string }
   | { status: 'ready'; summary: DashboardSummary };
 
+type CategoriesState =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'ready'; categories: Category[] };
+
 export function TodayPage() {
   const user = useOutletContext<User>();
   const navigate = useNavigate();
   const [referenceDate] = useState(() => formatLocalDate(new Date()));
   const [refreshKey, setRefreshKey] = useState(0);
+  const [categoriesRefreshKey, setCategoriesRefreshKey] = useState(0);
   const [dashboard, setDashboard] = useState<DashboardState>({
+    status: 'loading',
+  });
+  const [categoriesState, setCategoriesState] = useState<CategoriesState>({
     status: 'loading',
   });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -28,6 +42,41 @@ export function TodayPage() {
   function handleTasksChanged(): void {
     setRefreshKey((value) => value + 1);
   }
+
+  function handleCategoriesChanged(): void {
+    setCategoriesRefreshKey((value) => value + 1);
+    setRefreshKey((value) => value + 1);
+  }
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadCategories(): Promise<void> {
+      try {
+        const categories = await getCategories();
+
+        if (active) {
+          setCategoriesState({ status: 'ready', categories });
+        }
+      } catch (error: unknown) {
+        if (active) {
+          setCategoriesState({
+            status: 'error',
+            message:
+              error instanceof Error
+                ? error.message
+                : 'Não foi possível carregar as categorias',
+          });
+        }
+      }
+    }
+
+    void loadCategories();
+
+    return () => {
+      active = false;
+    };
+  }, [categoriesRefreshKey]);
 
   useEffect(() => {
     let active = true;
@@ -76,6 +125,9 @@ export function TodayPage() {
       setIsLoggingOut(false);
     }
   }
+
+  const categories =
+    categoriesState.status === 'ready' ? categoriesState.categories : [];
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-8 text-slate-900">
@@ -200,8 +252,21 @@ export function TodayPage() {
             </section>
           </>
         ) : null}
-        <TaskForm date={referenceDate} onCreated={handleTasksChanged} />
+        <CategoriesPanel
+          categories={categories}
+          error={
+            categoriesState.status === 'error' ? categoriesState.message : null
+          }
+          isLoading={categoriesState.status === 'loading'}
+          onChanged={handleCategoriesChanged}
+        />
+        <TaskForm
+          categories={categories}
+          date={referenceDate}
+          onCreated={handleTasksChanged}
+        />
         <TasksList
+          categories={categories}
           date={referenceDate}
           onChanged={handleTasksChanged}
           refreshKey={refreshKey}
