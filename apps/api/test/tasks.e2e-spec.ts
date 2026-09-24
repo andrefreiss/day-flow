@@ -128,6 +128,41 @@ describe('Tasks', () => {
       .expect(201);
   });
 
+  it('limpa campos opcionais com null', async () => {
+    const criada = await request(server)
+      .post('/api/tasks')
+      .set('Cookie', dono)
+      .send({
+        title: 'Planejar apresentação',
+        description: 'Preparar roteiro',
+        date: '2026-09-22',
+        startTime: '14:00',
+        endTime: '15:00',
+        categoryId: categoriaDoDono,
+      })
+      .expect(201);
+
+    const id = (criada.body as { id: string }).id;
+
+    const response = await request(server)
+      .patch(`/api/tasks/${id}`)
+      .set('Cookie', dono)
+      .send({
+        description: null,
+        startTime: null,
+        endTime: null,
+        categoryId: null,
+      })
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      description: null,
+      startTime: null,
+      endTime: null,
+      categoryId: null,
+    });
+  });
+
   it('recusa a categoria de outro usuário', async () => {
     await request(server)
       .post('/api/tasks')

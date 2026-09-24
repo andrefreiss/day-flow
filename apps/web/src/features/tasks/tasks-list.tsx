@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
+  deleteTask,
   getTasks,
   updateTaskStatus,
   type Task,
   type TaskPriority,
 } from './tasks-api.ts';
+import { TaskEditForm } from './task-edit-form.tsx';
 
 type TasksListProps = {
   date: string;
@@ -44,6 +46,8 @@ function formatTaskTime(task: Task): string {
 export function TasksList({ date, refreshKey, onChanged }: TasksListProps) {
   const [state, setState] = useState<TasksState>({ status: 'loading' });
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -79,7 +83,6 @@ export function TasksList({ date, refreshKey, onChanged }: TasksListProps) {
   async function handleStatusChange(task: Task): Promise<void> {
     setActionError(null);
     setUpdatingTaskId(task.id);
-
     try {
       await updateTaskStatus(
         task.id,
@@ -95,6 +98,32 @@ export function TasksList({ date, refreshKey, onChanged }: TasksListProps) {
       );
     } finally {
       setUpdatingTaskId(null);
+    }
+  }
+
+  async function handleDelete(task: Task): Promise<void> {
+    const confirmed = window.confirm(
+      `Deseja realmente excluir a tarefa "${task.title}"?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setActionError(null);
+    setDeletingTaskId(task.id);
+
+    try {
+      await deleteTask(task.id);
+      onChanged();
+    } catch (error: unknown) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível excluir a tarefa',
+      );
+    } finally {
+      setDeletingTaskId(null);
     }
   }
 
@@ -134,64 +163,105 @@ export function TasksList({ date, refreshKey, onChanged }: TasksListProps) {
       {state.status === 'ready' && state.tasks.length > 0 ? (
         <ul className="mt-6 divide-y divide-slate-200">
           {state.tasks.map((task) => (
-            <li
-              className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
-              key={task.id}
-            >
-              <div>
-                <p
-                  className={
-                    task.status === 'DONE'
-                      ? 'font-medium text-slate-400 line-through'
-                      : 'font-medium text-slate-900'
-                  }
-                >
-                  {task.title}
-                </p>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  {formatTaskTime(task)}
-                </p>
-
-                {task.description ? (
-                  <p className="mt-2 text-sm text-slate-600">
-                    {task.description}
+            <li className="py-4" key={task.id}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p
+                    className={
+                      task.status === 'DONE'
+                        ? 'font-medium text-slate-400 line-through'
+                        : 'font-medium text-slate-900'
+                    }
+                  >
+                    {task.title}
                   </p>
-                ) : null}
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    {formatTaskTime(task)}
+                  </p>
+
+                  {task.description ? (
+                    <p className="mt-2 text-sm text-slate-600">
+                      {task.description}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${priorityStyles[task.priority]}`}
+                  >
+                    {priorityLabels[task.priority]}
+                  </span>
+
+                  <span
+                    className={
+                      task.status === 'DONE'
+                        ? 'rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700'
+                        : 'rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700'
+                    }
+                  >
+                    {task.status === 'DONE' ? 'Concluída' : 'Pendente'}
+                  </span>
+
+                  <button
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={
+                      updatingTaskId !== null || deletingTaskId !== null
+                    }
+                    onClick={() => {
+                      void handleStatusChange(task);
+                    }}
+                    type="button"
+                  >
+                    {updatingTaskId === task.id
+                      ? 'Salvando...'
+                      : task.status === 'DONE'
+                        ? 'Reabrir'
+                        : 'Concluir'}
+                  </button>
+                  <button
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={
+                      updatingTaskId !== null || deletingTaskId !== null
+                    }
+                    onClick={() => {
+                      setActionError(null);
+                      setEditingTaskId((currentId) =>
+                        currentId === task.id ? null : task.id,
+                      );
+                    }}
+                    type="button"
+                  >
+                    {editingTaskId === task.id ? 'Fechar edição' : 'Editar'}
+                  </button>
+                  <button
+                    className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={
+                      updatingTaskId !== null || deletingTaskId !== null
+                    }
+                    onClick={() => {
+                      void handleDelete(task);
+                    }}
+                    type="button"
+                  >
+                    {deletingTaskId === task.id ? 'Excluindo...' : 'Excluir'}
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${priorityStyles[task.priority]}`}
-                >
-                  {priorityLabels[task.priority]}
-                </span>
-
-                <span
-                  className={
-                    task.status === 'DONE'
-                      ? 'rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700'
-                      : 'rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700'
-                  }
-                >
-                  {task.status === 'DONE' ? 'Concluída' : 'Pendente'}
-                </span>
-
-                <button
-                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={updatingTaskId !== null}
-                  onClick={() => {
-                    void handleStatusChange(task);
+              {editingTaskId === task.id ? (
+                <TaskEditForm
+                  onCancel={() => {
+                    setEditingTaskId(null);
                   }}
-                  type="button"
-                >
-                  {updatingTaskId === task.id
-                    ? 'Salvando...'
-                    : task.status === 'DONE'
-                      ? 'Reabrir'
-                      : 'Concluir'}
-                </button>
-              </div>
+                  onUpdated={() => {
+                    setEditingTaskId(null);
+                    onChanged();
+                  }}
+                  task={task}
+                />
+              ) : null}
             </li>
           ))}
         </ul>

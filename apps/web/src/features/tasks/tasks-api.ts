@@ -27,6 +27,17 @@ export type CreateTaskInput = {
   priority: TaskPriority;
 };
 
+export type UpdateTaskInput = {
+  title?: string;
+  description?: string | null;
+  date?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  categoryId?: string | null;
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -120,16 +131,16 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
   return data;
 }
 
-export async function updateTaskStatus(
+export async function updateTask(
   id: string,
-  status: TaskStatus,
+  input: UpdateTaskInput,
 ): Promise<Task> {
   const response = await apiFetch(`/tasks/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify(input),
   });
 
   if (response.status === 401) {
@@ -138,6 +149,10 @@ export async function updateTaskStatus(
 
   if (response.status === 404) {
     throw new Error('Tarefa não encontrada');
+  }
+
+  if (response.status === 400) {
+    throw new Error('Verifique os dados da tarefa');
   }
 
   if (!response.ok) {
@@ -151,4 +166,29 @@ export async function updateTaskStatus(
   }
 
   return data;
+}
+
+export async function updateTaskStatus(
+  id: string,
+  status: TaskStatus,
+): Promise<Task> {
+  return updateTask(id, { status });
+}
+
+export async function deleteTask(id: string): Promise<void> {
+  const response = await apiFetch(`/tasks/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+
+  if (response.status === 401) {
+    throw new Error('Sua sessão expirou');
+  }
+
+  if (response.status === 404) {
+    throw new Error('Tarefa não encontrada');
+  }
+
+  if (!response.ok) {
+    throw new Error('Não foi possível excluir a tarefa');
+  }
 }
