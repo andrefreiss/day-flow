@@ -1,0 +1,201 @@
+import { useEffect, useState } from 'react';
+import {
+  getTasks,
+  updateTaskStatus,
+  type Task,
+  type TaskPriority,
+} from './tasks-api.ts';
+
+type TasksListProps = {
+  date: string;
+  refreshKey: number;
+  onChanged: () => void;
+};
+
+type TasksState =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'ready'; tasks: Task[] };
+
+const priorityLabels: Record<TaskPriority, string> = {
+  LOW: 'Baixa',
+  MEDIUM: 'Média',
+  HIGH: 'Alta',
+};
+
+const priorityStyles: Record<TaskPriority, string> = {
+  LOW: 'bg-slate-100 text-slate-700',
+  MEDIUM: 'bg-amber-100 text-amber-700',
+  HIGH: 'bg-red-100 text-red-700',
+};
+
+function formatTaskTime(task: Task): string {
+  if (!task.startTime) {
+    return 'Sem horário';
+  }
+
+  if (!task.endTime) {
+    return task.startTime;
+  }
+
+  return `${task.startTime}–${task.endTime}`;
+}
+
+export function TasksList({ date, refreshKey, onChanged }: TasksListProps) {
+  const [state, setState] = useState<TasksState>({ status: 'loading' });
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadTasks(): Promise<void> {
+      try {
+        const tasks = await getTasks(date);
+
+        if (active) {
+          setState({ status: 'ready', tasks });
+        }
+      } catch (error: unknown) {
+        if (active) {
+          setState({
+            status: 'error',
+            message:
+              error instanceof Error
+                ? error.message
+                : 'Não foi possível carregar as tarefas',
+          });
+        }
+      }
+    }
+
+    void loadTasks();
+
+    return () => {
+      active = false;
+    };
+  }, [date, refreshKey]);
+
+  async function handleStatusChange(task: Task): Promise<void> {
+    setActionError(null);
+    setUpdatingTaskId(task.id);
+
+    try {
+      await updateTaskStatus(
+        task.id,
+        task.status === 'DONE' ? 'PENDING' : 'DONE',
+      );
+
+      onChanged();
+    } catch (error: unknown) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível atualizar a tarefa',
+      );
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  }
+
+  return (
+    <section className="mt-6 rounded-xl bg-white p-6 shadow-sm">
+      <div>
+        <h2 className="text-lg font-semibold">Tarefas de hoje</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Sua programação para o dia.
+        </p>
+      </div>
+
+      {actionError ? (
+        <p className="mt-4 text-sm text-red-700" role="alert">
+          {actionError}
+        </p>
+      ) : null}
+
+      {state.status === 'loading' ? (
+        <p className="mt-6 text-slate-600" aria-live="polite">
+          Carregando tarefas...
+        </p>
+      ) : null}
+
+      {state.status === 'error' ? (
+        <p className="mt-6 text-red-700" role="alert">
+          {state.message}
+        </p>
+      ) : null}
+
+      {state.status === 'ready' && state.tasks.length === 0 ? (
+        <p className="mt-6 rounded-lg bg-slate-50 p-4 text-slate-600">
+          Nenhuma tarefa para hoje.
+        </p>
+      ) : null}
+
+      {state.status === 'ready' && state.tasks.length > 0 ? (
+        <ul className="mt-6 divide-y divide-slate-200">
+          {state.tasks.map((task) => (
+            <li
+              className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+              key={task.id}
+            >
+              <div>
+                <p
+                  className={
+                    task.status === 'DONE'
+                      ? 'font-medium text-slate-400 line-through'
+                      : 'font-medium text-slate-900'
+                  }
+                >
+                  {task.title}
+                </p>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  {formatTaskTime(task)}
+                </p>
+
+                {task.description ? (
+                  <p className="mt-2 text-sm text-slate-600">
+                    {task.description}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${priorityStyles[task.priority]}`}
+                >
+                  {priorityLabels[task.priority]}
+                </span>
+
+                <span
+                  className={
+                    task.status === 'DONE'
+                      ? 'rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700'
+                      : 'rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700'
+                  }
+                >
+                  {task.status === 'DONE' ? 'Concluída' : 'Pendente'}
+                </span>
+
+                <button
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={updatingTaskId !== null}
+                  onClick={() => {
+                    void handleStatusChange(task);
+                  }}
+                  type="button"
+                >
+                  {updatingTaskId === task.id
+                    ? 'Salvando...'
+                    : task.status === 'DONE'
+                      ? 'Reabrir'
+                      : 'Concluir'}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
