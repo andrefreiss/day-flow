@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { Category } from '../categories/categories-api.ts';
 import {
   deleteTask,
   getTasks,
@@ -9,6 +10,7 @@ import {
 import { TaskEditForm } from './task-edit-form.tsx';
 
 type TasksListProps = {
+  categories: Category[];
   date: string;
   refreshKey: number;
   onChanged: () => void;
@@ -43,7 +45,37 @@ function formatTaskTime(task: Task): string {
   return `${task.startTime}–${task.endTime}`;
 }
 
-export function TasksList({ date, refreshKey, onChanged }: TasksListProps) {
+function TaskCategoryBadge({
+  categories,
+  task,
+}: {
+  categories: Category[];
+  task: Task;
+}) {
+  const category = categories.find((item) => item.id === task.categoryId);
+
+  if (!category) {
+    return null;
+  }
+
+  return (
+    <span className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+      <span
+        aria-hidden="true"
+        className="h-2.5 w-2.5 rounded-full"
+        style={{ backgroundColor: category.color }}
+      />
+      {category.name}
+    </span>
+  );
+}
+
+export function TasksList({
+  categories,
+  date,
+  refreshKey,
+  onChanged,
+}: TasksListProps) {
   const [state, setState] = useState<TasksState>({ status: 'loading' });
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
@@ -180,6 +212,8 @@ export function TasksList({ date, refreshKey, onChanged }: TasksListProps) {
                     {formatTaskTime(task)}
                   </p>
 
+                  <TaskCategoryBadge categories={categories} task={task} />
+
                   {task.description ? (
                     <p className="mt-2 text-sm text-slate-600">
                       {task.description}
@@ -252,6 +286,8 @@ export function TasksList({ date, refreshKey, onChanged }: TasksListProps) {
 
               {editingTaskId === task.id ? (
                 <TaskEditForm
+                  categories={categories}
+                  key={`${task.id}:${task.categoryId ?? ''}`}
                   onCancel={() => {
                     setEditingTaskId(null);
                   }}

@@ -25,6 +25,7 @@ export type CreateTaskInput = {
   startTime?: string;
   endTime?: string;
   priority: TaskPriority;
+  categoryId?: string;
 };
 
 export type UpdateTaskInput = {
