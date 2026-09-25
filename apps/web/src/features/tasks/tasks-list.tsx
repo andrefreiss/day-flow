@@ -166,7 +166,7 @@ export function TasksList({
   return (
     <section className="mt-6 rounded-xl bg-white p-6 shadow-sm">
       <div>
-        <h2 className="text-lg font-semibold">Tarefas de hoje</h2>
+        <h2 className="text-lg font-semibold">Tarefas do dia</h2>
         <p className="mt-1 text-sm text-slate-500">
           Sua programação para o dia.
         </p>

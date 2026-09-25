@@ -78,9 +78,16 @@ function isTaskList(value: unknown): value is Task[] {
 }
 
 export async function getTasks(date: string): Promise<Task[]> {
+  return getTasksInRange(date, date);
+}
+
+export async function getTasksInRange(
+  from: string,
+  to: string,
+): Promise<Task[]> {
   const query = new URLSearchParams({
-    from: date,
-    to: date,
+    from,
+    to,
   });
 
   const response = await apiFetch(`/tasks?${query.toString()}`);
