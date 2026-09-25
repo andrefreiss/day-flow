@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Category } from '../categories/categories-api.ts';
+import { SubtasksPanel } from '../subtasks/subtasks-panel.tsx';
 import {
   deleteTask,
   getTasks,
@@ -80,6 +81,9 @@ export function TasksList({
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [expandedSubtasksTaskId, setExpandedSubtasksTaskId] = useState<
+    string | null
+  >(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -255,6 +259,23 @@ export function TasksList({
                         : 'Concluir'}
                   </button>
                   <button
+                    aria-expanded={expandedSubtasksTaskId === task.id}
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={
+                      updatingTaskId !== null || deletingTaskId !== null
+                    }
+                    onClick={() => {
+                      setExpandedSubtasksTaskId((currentId) =>
+                        currentId === task.id ? null : task.id,
+                      );
+                    }}
+                    type="button"
+                  >
+                    {expandedSubtasksTaskId === task.id
+                      ? 'Fechar subtarefas'
+                      : 'Subtarefas'}
+                  </button>
+                  <button
                     className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={
                       updatingTaskId !== null || deletingTaskId !== null
@@ -297,6 +318,10 @@ export function TasksList({
                   }}
                   task={task}
                 />
+              ) : null}
+
+              {expandedSubtasksTaskId === task.id ? (
+                <SubtasksPanel taskId={task.id} />
               ) : null}
             </li>
           ))}
