@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router';
 import { logout, type User } from '../features/auth/auth-api.ts';
+import { DateNavigation } from '../features/calendar/date-navigation.tsx';
+import { MonthCalendar } from '../features/calendar/month-calendar.tsx';
 import {
   getCategories,
   type Category,
@@ -10,7 +12,7 @@ import {
   getDashboard,
   type DashboardSummary,
 } from '../features/dashboard/dashboard-api.ts';
-import { formatLocalDate } from '../lib/date.ts';
+import { formatLocalDate, formatLongDate, startOfMonth } from '../lib/date.ts';
 import { TaskForm } from '../features/tasks/task-form.tsx';
 import { TasksList } from '../features/tasks/tasks-list.tsx';
 
@@ -27,7 +29,12 @@ type CategoriesState =
 export function TodayPage() {
   const user = useOutletContext<User>();
   const navigate = useNavigate();
-  const [referenceDate] = useState(() => formatLocalDate(new Date()));
+  const [referenceDate, setReferenceDate] = useState(() =>
+    formatLocalDate(new Date()),
+  );
+  const [calendarMonth, setCalendarMonth] = useState(() =>
+    startOfMonth(formatLocalDate(new Date())),
+  );
   const [refreshKey, setRefreshKey] = useState(0);
   const [categoriesRefreshKey, setCategoriesRefreshKey] = useState(0);
   const [dashboard, setDashboard] = useState<DashboardState>({
@@ -41,6 +48,12 @@ export function TodayPage() {
 
   function handleTasksChanged(): void {
     setRefreshKey((value) => value + 1);
+  }
+
+  function handleReferenceDateChange(date: string): void {
+    setReferenceDate(date);
+    setCalendarMonth(startOfMonth(date));
+    setDashboard({ status: 'loading' });
   }
 
   function handleCategoriesChanged(): void {
@@ -165,6 +178,19 @@ export function TodayPage() {
           </p>
         ) : null}
 
+        <DateNavigation
+          date={referenceDate}
+          onChange={handleReferenceDateChange}
+        />
+        <MonthCalendar
+          key={calendarMonth}
+          month={calendarMonth}
+          onMonthChange={setCalendarMonth}
+          onSelectDate={handleReferenceDateChange}
+          refreshKey={refreshKey}
+          selectedDate={referenceDate}
+        />
+
         {dashboard.status === 'loading' ? (
           <p className="mt-8 text-slate-600" aria-live="polite">
             Carregando resumo...
@@ -184,9 +210,9 @@ export function TodayPage() {
           <>
             <div className="mt-8 flex items-end justify-between">
               <div>
-                <h2 className="text-xl font-semibold">Resumo de hoje</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  {dashboard.summary.date}
+                <h2 className="text-xl font-semibold">Resumo do dia</h2>
+                <p className="mt-1 text-sm capitalize text-slate-500">
+                  {formatLongDate(dashboard.summary.date)}
                 </p>
               </div>
             </div>
@@ -268,6 +294,7 @@ export function TodayPage() {
         <TasksList
           categories={categories}
           date={referenceDate}
+          key={referenceDate}
           onChanged={handleTasksChanged}
           refreshKey={refreshKey}
         />

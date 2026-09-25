@@ -83,7 +83,7 @@ export function TaskForm({ categories, date, onCreated }: TaskFormProps) {
       <div>
         <h2 className="text-lg font-semibold">Nova tarefa</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Adicione uma atividade para hoje.
+          Adicione uma atividade para a data selecionada.
         </p>
       </div>
 
