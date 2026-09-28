@@ -1,6 +1,9 @@
 import { Route, Routes } from 'react-router';
 import { GuestRoute } from './features/auth/guest-route.tsx';
 import { ProtectedRoute } from './features/auth/protected-route.tsx';
+import { AppLayout } from './layouts/app-layout.tsx';
+import { CalendarPage } from './pages/calendar-page.tsx';
+import { CategoriesPage } from './pages/categories-page.tsx';
 import { LoginPage } from './pages/login-page.tsx';
 import { NotFoundPage } from './pages/not-found-page.tsx';
 import { TodayPage } from './pages/today-page.tsx';
@@ -10,7 +13,11 @@ function App() {
   return (
     <Routes>
       <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<TodayPage />} />
+        <Route element={<AppLayout />}>
+          <Route index element={<TodayPage />} />
+          <Route path="calendar" element={<CalendarPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
+        </Route>
       </Route>
       <Route element={<GuestRoute />}>
         <Route path="/login" element={<LoginPage />} />

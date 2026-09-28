@@ -116,9 +116,14 @@ O frontend usa React Router para separar páginas públicas e protegidas. Ao
 recarregar a aplicação, a rota protegida consulta `GET /auth/me` antes de
 mostrar o conteúdo, evitando confiar apenas em estado armazenado no navegador.
 
-A página principal centraliza a data selecionada. Dashboard, calendário,
-formulário e lista de tarefas recebem essa mesma referência, então navegar para
-outro dia atualiza todos os blocos de forma consistente.
+A área protegida usa um layout responsivo compartilhado com acesso à rotina,
+ao calendário e às categorias. A página de rotina reúne o resumo diário,
+o formulário e a lista de tarefas, enquanto o calendário oferece uma visão
+mensal para planejar e consultar outros dias.
+
+As páginas de rotina e calendário controlam a própria data selecionada. Ao
+navegar para outro dia, o resumo, o formulário e a lista exibidos na página são
+atualizados de forma consistente.
 
 O calendário carrega as tarefas pelo intervalo completo do mês e mostra, em
 cada dia, quantas foram concluídas. Datas são montadas no horário local em vez
@@ -239,6 +244,7 @@ apps/
     src/features/dashboard/    consumo do resumo diário
     src/features/subtasks/     gerenciamento de subtarefas
     src/features/tasks/        formulários e lista de tarefas
+    src/layouts/                navegação e estrutura das páginas protegidas
     src/pages/                 páginas da aplicação
 .github/workflows/ci.yml       pipeline de integração contínua
 tsconfig.base.json             TypeScript compartilhado
