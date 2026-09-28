@@ -9,6 +9,7 @@ import {
   type TaskPriority,
 } from './tasks-api.ts';
 import { TaskEditForm } from './task-edit-form.tsx';
+import { TaskFilters, type TaskFilterValues } from './task-filters.tsx';
 
 type TasksListProps = {
   categories: Category[];
@@ -44,6 +45,14 @@ function formatTaskTime(task: Task): string {
   }
 
   return `${task.startTime}–${task.endTime}`;
+}
+
+function normalizeSearch(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLocaleLowerCase('pt-BR')
+    .trim();
 }
 
 function TaskCategoryBadge({
@@ -85,6 +94,39 @@ export function TasksList({
     string | null
   >(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<TaskFilterValues>({
+    query: '',
+    status: '',
+    priority: '',
+    categoryId: '',
+  });
+  const categoryId =
+    filters.categoryId === 'uncategorized' ||
+    categories.some((category) => category.id === filters.categoryId)
+      ? filters.categoryId
+      : '';
+  const query = normalizeSearch(filters.query);
+  const visibleTasks =
+    state.status === 'ready'
+      ? state.tasks.filter((task) => {
+          const matchesQuery = normalizeSearch(
+            `${task.title} ${task.description ?? ''}`,
+          ).includes(query);
+          const matchesStatus =
+            !filters.status || task.status === filters.status;
+          const matchesPriority =
+            !filters.priority || task.priority === filters.priority;
+          const matchesCategory =
+            !categoryId ||
+            (categoryId === 'uncategorized'
+              ? task.categoryId === null
+              : task.categoryId === categoryId);
+
+          return (
+            matchesQuery && matchesStatus && matchesPriority && matchesCategory
+          );
+        })
+      : [];
 
   useEffect(() => {
     let active = true;
@@ -172,6 +214,18 @@ export function TasksList({
         </p>
       </div>
 
+      <TaskFilters
+        categories={categories}
+        onChange={setFilters}
+        value={{ ...filters, categoryId }}
+      />
+
+      {state.status === 'ready' ? (
+        <p className="mt-4 text-sm text-slate-500" role="status">
+          Tarefas exibidas: {visibleTasks.length} de {state.tasks.length}.
+        </p>
+      ) : null}
+
       {actionError ? (
         <p className="mt-4 text-sm text-red-700" role="alert">
           {actionError}
@@ -192,13 +246,22 @@ export function TasksList({
 
       {state.status === 'ready' && state.tasks.length === 0 ? (
         <p className="mt-6 rounded-lg bg-slate-50 p-4 text-slate-600">
-          Nenhuma tarefa para hoje.
+          Nenhuma tarefa para a data selecionada.
         </p>
       ) : null}
 
-      {state.status === 'ready' && state.tasks.length > 0 ? (
+      {state.status === 'ready' &&
+      state.tasks.length > 0 &&
+      visibleTasks.length === 0 ? (
+        <p className="mt-6 rounded-lg bg-slate-50 p-4 text-slate-600">
+          Nenhuma tarefa corresponde aos filtros. Ajuste a busca ou limpe os
+          filtros para ver todas as tarefas do dia.
+        </p>
+      ) : null}
+
+      {state.status === 'ready' && visibleTasks.length > 0 ? (
         <ul className="mt-6 divide-y divide-slate-200">
-          {state.tasks.map((task) => (
+          {visibleTasks.map((task) => (
             <li className="py-4" key={task.id}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>

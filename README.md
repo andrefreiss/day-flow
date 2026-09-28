@@ -17,11 +17,14 @@ deploy.
 - resumo diário com total, concluídas, pendentes, atrasadas e próximas
 - criação, edição, conclusão, reabertura e exclusão de tarefas
 - prioridades, descrição e horários opcionais
+- busca por título ou descrição e filtros combinados por status, prioridade e categoria
 - criação, edição e exclusão de categorias com cores
 - associação de categorias às tarefas
 - criação, edição, conclusão e exclusão de subtarefas
 - navegação entre dias e seleção direta de data
 - calendário mensal com quantidade e progresso das tarefas por dia
+- visão semanal com horários, tarefas e progresso de domingo a sábado
+- alternância entre mês, semana e dia mantendo a data selecionada
 - validação de formulários e tratamento dos estados de carregamento e erro
 
 ## Stack
@@ -119,7 +122,7 @@ mostrar o conteúdo, evitando confiar apenas em estado armazenado no navegador.
 A área protegida usa um layout responsivo compartilhado com acesso à rotina,
 ao calendário e às categorias. A página de rotina reúne o resumo diário,
 o formulário e a lista de tarefas, enquanto o calendário oferece uma visão
-mensal para planejar e consultar outros dias.
+mensal, semanal ou diária para planejar e consultar outros dias.
 
 As páginas de rotina e calendário controlam a própria data selecionada. Ao
 navegar para outro dia, o resumo, o formulário e a lista exibidos na página são
@@ -128,6 +131,19 @@ atualizados de forma consistente.
 O calendário carrega as tarefas pelo intervalo completo do mês e mostra, em
 cada dia, quantas foram concluídas. Datas são montadas no horário local em vez
 de serem interpretadas como UTC, evitando deslocamentos de um dia.
+
+A visão semanal consulta um único intervalo de domingo a sábado, inclusive
+quando atravessa meses ou anos. Cada dia mostra horários, títulos e progresso
+das tarefas. A visão diária mantém apenas o formulário e a lista da data
+selecionada. Criar, editar, concluir ou excluir uma tarefa atualiza também o
+calendário visível.
+
+Nas páginas de rotina e calendário, a lista diária permite buscar por título ou
+descrição sem diferenciar maiúsculas e acentos. Os filtros de status, prioridade
+e categoria podem ser combinados, incluindo tarefas sem categoria. A filtragem
+usa as tarefas já carregadas, sem novas consultas à API, e preserva sua ordem.
+Os totais do resumo e do calendário não são filtrados. Ao trocar a data ou sair
+da página, os filtros da lista são reiniciados.
 
 ## Categorias
 
@@ -269,8 +285,9 @@ docker-compose.yml             PostgreSQL de desenvolvimento
 ## Testes
 
 O frontend usa Vitest, Testing Library e jsdom. A suíte cobre os utilitários de
-data, a navegação diária, o calendário mensal e as regras principais do
-formulário de tarefas. Os testes não dependem de um navegador ou servidor em
+data, a navegação diária, os calendários mensal e semanal, a troca de
+visualizações, a atualização do calendário após ações nas tarefas e as regras
+principais do formulário. Os testes não dependem de um navegador ou servidor em
 execução.
 
 A API tem testes unitários e 60 cenários end-to-end para autenticação, banco,

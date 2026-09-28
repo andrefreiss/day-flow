@@ -1,12 +1,22 @@
 import { useState } from 'react';
 import { DateNavigation } from '../features/calendar/date-navigation.tsx';
 import { MonthCalendar } from '../features/calendar/month-calendar.tsx';
+import { WeekCalendar } from '../features/calendar/week-calendar.tsx';
 import { useCategories } from '../features/categories/use-categories.ts';
 import { TaskForm } from '../features/tasks/task-form.tsx';
 import { TasksList } from '../features/tasks/tasks-list.tsx';
-import { formatLocalDate, startOfMonth } from '../lib/date.ts';
+import { formatLocalDate, startOfMonth, startOfWeek } from '../lib/date.ts';
+
+type CalendarView = 'month' | 'week' | 'day';
+
+const calendarViews: { value: CalendarView; label: string }[] = [
+  { value: 'month', label: 'Mês' },
+  { value: 'week', label: 'Semana' },
+  { value: 'day', label: 'Dia' },
+];
 
 export function CalendarPage() {
+  const [view, setView] = useState<CalendarView>('month');
   const [referenceDate, setReferenceDate] = useState(() =>
     formatLocalDate(new Date()),
   );
@@ -50,14 +60,45 @@ export function CalendarPage() {
         date={referenceDate}
         onChange={handleReferenceDateChange}
       />
-      <MonthCalendar
-        key={calendarMonth}
-        month={calendarMonth}
-        onMonthChange={setCalendarMonth}
-        onSelectDate={handleReferenceDateChange}
-        refreshKey={refreshKey}
-        selectedDate={referenceDate}
-      />
+      <div
+        aria-label="Visualização do calendário"
+        className="mt-6 flex w-fit gap-1 rounded-xl border border-slate-200 bg-white p-1"
+        role="group"
+      >
+        {calendarViews.map((option) => (
+          <button
+            aria-pressed={view === option.value}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold ${view === option.value ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+            key={option.value}
+            onClick={() => {
+              setView(option.value);
+              setCalendarMonth(startOfMonth(referenceDate));
+            }}
+            type="button"
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+      {view === 'month' ? (
+        <MonthCalendar
+          key={`month:${calendarMonth}`}
+          month={calendarMonth}
+          onMonthChange={setCalendarMonth}
+          onSelectDate={handleReferenceDateChange}
+          refreshKey={refreshKey}
+          selectedDate={referenceDate}
+        />
+      ) : null}
+      {view === 'week' ? (
+        <WeekCalendar
+          key={`week:${startOfWeek(referenceDate)}`}
+          week={startOfWeek(referenceDate)}
+          onSelectDate={handleReferenceDateChange}
+          refreshKey={refreshKey}
+          selectedDate={referenceDate}
+        />
+      ) : null}
       <TaskForm
         categories={categories}
         date={referenceDate}
@@ -66,7 +107,7 @@ export function CalendarPage() {
       <TasksList
         categories={categories}
         date={referenceDate}
-        key={referenceDate}
+        key={`tasks:${referenceDate}`}
         onChanged={handleTasksChanged}
         refreshKey={refreshKey}
       />

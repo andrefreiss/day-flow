@@ -27,6 +27,14 @@ export function startOfMonth(value: string): string {
   return formatLocalDate(new Date(date.getFullYear(), date.getMonth(), 1));
 }
 
+export function startOfWeek(value: string): string {
+  return addDays(value, -parseLocalDate(value).getDay());
+}
+
+export function endOfWeek(value: string): string {
+  return addDays(startOfWeek(value), 6);
+}
+
 export function endOfMonth(value: string): string {
   const date = parseLocalDate(value);
 
