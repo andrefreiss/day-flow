@@ -1,9 +1,20 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { login } from '../features/auth/auth-api.ts';
+
+function isSessionExpiredState(state: unknown): boolean {
+  return (
+    typeof state === 'object' &&
+    state !== null &&
+    'sessionExpired' in state &&
+    state.sessionExpired === true
+  );
+}
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const sessionExpired = isSessionExpiredState(location.state);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -46,6 +57,15 @@ export function LoginPage() {
         <p className="mt-2 text-slate-600">
           Acesse sua conta para organizar o seu dia.
         </p>
+
+        {sessionExpired ? (
+          <p
+            className="mt-6 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800"
+            role="status"
+          >
+            Sua sessão expirou. Entre novamente.
+          </p>
+        ) : null}
 
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           <div>
