@@ -25,7 +25,7 @@ describe('TaskForm', () => {
       categoryId: 'category-id',
       title: 'Estudar React',
       description: null,
-      date: '2026-09-25T00:00:00.000Z',
+      date: '2026-09-25',
       startTime: null,
       endTime: null,
       status: 'PENDING',

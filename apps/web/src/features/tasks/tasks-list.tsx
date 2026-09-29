@@ -407,7 +407,7 @@ export function TasksList({
                   onUpdated={(updatedTask) => {
                     setEditingTaskId(null);
                     setSuccessMessage(
-                      updatedTask.date.slice(0, 10) === task.date.slice(0, 10)
+                      updatedTask.date === task.date
                         ? 'Tarefa atualizada.'
                         : `Tarefa remarcada para ${formatLongDate(updatedTask.date)}.`,
                     );

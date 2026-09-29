@@ -3,6 +3,7 @@ import {
   ValidateBy,
   type ValidationOptions,
 } from 'class-validator';
+import { fromDateColumn, toDateColumn } from './date-column.js';
 
 const calendarDateFormat = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -11,11 +12,9 @@ export function isCalendarDate(value: unknown): boolean {
     return false;
   }
 
-  const date = new Date(`${value}T00:00:00.000Z`);
+  const date = toDateColumn(value);
 
-  return (
-    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
-  );
+  return !Number.isNaN(date.getTime()) && fromDateColumn(date) === value;
 }
 
 export function IsCalendarDate(

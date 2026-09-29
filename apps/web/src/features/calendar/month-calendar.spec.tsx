@@ -24,7 +24,7 @@ function createTask(id: string, status: Task['status']): Task {
     categoryId: null,
     title: `Tarefa ${id}`,
     description: null,
-    date: '2026-09-25T00:00:00.000Z',
+    date: '2026-09-25',
     startTime: null,
     endTime: null,
     status,

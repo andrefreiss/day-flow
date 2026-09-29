@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { toDateColumn } from '../../common/date-column.js';
 import { PrismaService } from '../../database/prisma.service.js';
 import { TaskStatus } from '../../generated/prisma/enums.js';
-
-function toDateColumn(date: string): Date {
-  return new Date(`${date}T00:00:00.000Z`);
-}
 
 @Injectable()
 export class DashboardService {

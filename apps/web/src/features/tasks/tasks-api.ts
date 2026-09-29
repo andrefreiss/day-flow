@@ -1,4 +1,6 @@
 import { apiFetch } from '../../lib/api.ts';
+import { isLocalDate } from '../../lib/date.ts';
+import { isRecord } from '../../lib/guards.ts';
 
 export type TaskStatus = 'PENDING' | 'DONE';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -39,10 +41,6 @@ export type UpdateTaskInput = {
   categoryId?: string | null;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
 function isNullableString(value: unknown): value is string | null {
   return typeof value === 'string' || value === null;
 }
@@ -62,7 +60,7 @@ function isTask(value: unknown): value is Task {
     isNullableString(value.categoryId) &&
     typeof value.title === 'string' &&
     isNullableString(value.description) &&
-    typeof value.date === 'string' &&
+    isLocalDate(value.date) &&
     isNullableString(value.startTime) &&
     isNullableString(value.endTime) &&
     isTaskStatus(value.status) &&

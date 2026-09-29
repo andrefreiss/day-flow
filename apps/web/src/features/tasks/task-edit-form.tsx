@@ -18,8 +18,7 @@ export function TaskEditForm({
   const fieldId = useId();
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? '');
-  const currentDate = task.date.slice(0, 10);
-  const [date, setDate] = useState(currentDate);
+  const [date, setDate] = useState(task.date);
   const [startTime, setStartTime] = useState(task.startTime ?? '');
   const [endTime, setEndTime] = useState(task.endTime ?? '');
   const [priority, setPriority] = useState<TaskPriority>(task.priority);
@@ -62,7 +61,7 @@ export function TaskEditForm({
       const updatedTask = await updateTask(task.id, {
         title: normalizedTitle,
         description: description.trim() || null,
-        date: date === currentDate ? undefined : date,
+        date: date === task.date ? undefined : date,
         startTime: startTime || null,
         endTime: endTime || null,
         priority,

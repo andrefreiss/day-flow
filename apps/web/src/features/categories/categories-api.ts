@@ -1,4 +1,5 @@
 import { apiFetch } from '../../lib/api.ts';
+import { isRecord } from '../../lib/guards.ts';
 
 export type Category = {
   id: string;
@@ -12,10 +13,6 @@ export type SaveCategoryInput = {
   name: string;
   color: string;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 function isCategory(value: unknown): value is Category {
   return (
