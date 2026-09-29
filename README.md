@@ -303,6 +303,11 @@ visualizações, a atualização do calendário após ações nas tarefas e as r
 principais do formulário. Os testes não dependem de um navegador ou servidor em
 execução.
 
+O Vitest define o endereço da API em sua própria configuração e não carrega
+arquivos `.env`. As chamadas dos fluxos testados são simuladas nos testes, para
+que a suíte use o mesmo ambiente localmente e no CI, sem depender da configuração
+pessoal de quem executa.
+
 A API tem testes unitários e 60 cenários end-to-end para autenticação, banco,
 categorias, tarefas, subtarefas, dashboard e saúde. Os E2E rodam num **schema
 separado** (`test`) do mesmo PostgreSQL, definido em `DATABASE_TEST_URL`. É por
