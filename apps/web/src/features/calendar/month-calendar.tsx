@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { LoadError } from '../../components/load-error.tsx';
 import {
   addMonths,
   endOfMonth,
@@ -31,6 +32,7 @@ export function MonthCalendar({
   selectedDate,
 }: MonthCalendarProps) {
   const [state, setState] = useState<CalendarState>({ status: 'loading' });
+  const [retryKey, setRetryKey] = useState(0);
   const today = formatLocalDate(new Date());
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export function MonthCalendar({
     return () => {
       active = false;
     };
-  }, [month, refreshKey]);
+  }, [month, refreshKey, retryKey]);
 
   const tasksByDate = useMemo(() => {
     const result = new Map<string, { completed: number; total: number }>();
@@ -125,9 +127,14 @@ export function MonthCalendar({
       ) : null}
 
       {state.status === 'error' ? (
-        <p className="mt-5 text-sm text-red-700" role="alert">
-          {state.message}
-        </p>
+        <LoadError
+          message={state.message}
+          onRetry={() => {
+            setState({ status: 'loading' });
+            setRetryKey((value) => value + 1);
+          }}
+          label="Recarregar calendário"
+        />
       ) : null}
 
       <div className="mt-5 grid grid-cols-7 gap-1 text-center">

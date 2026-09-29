@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router';
+import { LoadError } from '../components/load-error.tsx';
 import type { User } from '../features/auth/auth-api.ts';
 import { DateNavigation } from '../features/calendar/date-navigation.tsx';
 import { useCategories } from '../features/categories/use-categories.ts';
@@ -22,10 +23,15 @@ export function TodayPage() {
     formatLocalDate(new Date()),
   );
   const [refreshKey, setRefreshKey] = useState(0);
+  const [dashboardRetryKey, setDashboardRetryKey] = useState(0);
   const [dashboard, setDashboard] = useState<DashboardState>({
     status: 'loading',
   });
-  const { categories, error: categoriesError } = useCategories();
+  const {
+    categories,
+    error: categoriesError,
+    refresh: refreshCategories,
+  } = useCategories();
 
   function handleTasksChanged(): void {
     setRefreshKey((value) => value + 1);
@@ -64,7 +70,7 @@ export function TodayPage() {
     return () => {
       active = false;
     };
-  }, [referenceDate, refreshKey]);
+  }, [referenceDate, refreshKey, dashboardRetryKey]);
 
   return (
     <>
@@ -81,10 +87,11 @@ export function TodayPage() {
       </header>
 
       {categoriesError ? (
-        <p className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
-          {categoriesError}. As tarefas continuam disponíveis sem o filtro de
-          categorias.
-        </p>
+        <LoadError
+          message={`${categoriesError}. As tarefas continuam disponíveis.`}
+          onRetry={refreshCategories}
+          label="Recarregar categorias"
+        />
       ) : null}
 
       <DateNavigation
@@ -99,9 +106,14 @@ export function TodayPage() {
       ) : null}
 
       {dashboard.status === 'error' ? (
-        <p className="mt-8 rounded-xl bg-red-50 p-4 text-red-700" role="alert">
-          {dashboard.message}
-        </p>
+        <LoadError
+          message={dashboard.message}
+          onRetry={() => {
+            setDashboard({ status: 'loading' });
+            setDashboardRetryKey((value) => value + 1);
+          }}
+          label="Recarregar resumo"
+        />
       ) : null}
 
       {dashboard.status === 'ready' ? (

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { SuccessMessage } from '../../components/success-message.tsx';
 import type { Category } from '../categories/categories-api.ts';
 import { createTask, type TaskPriority } from './tasks-api.ts';
 
@@ -17,6 +18,7 @@ export function TaskForm({ categories, date, onCreated }: TaskFormProps) {
   const [categoryId, setCategoryId] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const selectedCategoryId = categories.some(
     (category) => category.id === categoryId,
   )
@@ -24,6 +26,7 @@ export function TaskForm({ categories, date, onCreated }: TaskFormProps) {
     : '';
 
   async function submitTask(): Promise<void> {
+    setSuccessMessage(null);
     const normalizedTitle = title.trim();
 
     if (!normalizedTitle) {
@@ -61,6 +64,7 @@ export function TaskForm({ categories, date, onCreated }: TaskFormProps) {
       setEndTime('');
       setPriority('MEDIUM');
       setCategoryId('');
+      setSuccessMessage(`Tarefa "${normalizedTitle}" criada.`);
       onCreated();
     } catch (error: unknown) {
       setErrorMessage(
@@ -87,6 +91,10 @@ export function TaskForm({ categories, date, onCreated }: TaskFormProps) {
         </p>
       </div>
 
+      <SuccessMessage
+        message={successMessage}
+        onDismiss={() => setSuccessMessage(null)}
+      />
       <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
         <div>
           <label className="block text-sm font-medium" htmlFor="task-title">

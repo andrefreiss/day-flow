@@ -36,6 +36,30 @@ function createTask(id: string, status: Task['status']): Task {
 }
 
 describe('MonthCalendar', () => {
+  it('recarrega o mesmo mês quando a consulta falha', async () => {
+    vi.mocked(getTasksInRange)
+      .mockRejectedValueOnce(new Error('Falha de conexão'))
+      .mockResolvedValueOnce([createTask('1', 'DONE')]);
+    render(
+      <MonthCalendar
+        month="2026-09-01"
+        selectedDate="2026-09-25"
+        refreshKey={0}
+        onMonthChange={vi.fn()}
+        onSelectDate={vi.fn()}
+      />,
+    );
+    await screen.findByRole('alert');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Recarregar calendário' }),
+    );
+    await screen.findByText('1/1', { exact: false });
+    expect(getTasksInRange).toHaveBeenLastCalledWith(
+      '2026-09-01',
+      '2026-09-30',
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
   it('carrega e apresenta a quantidade de tarefas do mês', async () => {
     vi.mocked(getTasksInRange).mockResolvedValue([
       createTask('1', 'DONE'),

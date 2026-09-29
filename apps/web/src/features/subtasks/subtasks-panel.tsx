@@ -1,4 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { DeleteConfirmation } from '../../components/delete-confirmation.tsx';
+import { SuccessMessage } from '../../components/success-message.tsx';
+import { LoadError } from '../../components/load-error.tsx';
 import {
   createSubtask,
   deleteSubtask,
@@ -25,6 +28,8 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
   const [mutatingId, setMutatingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Subtask | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -62,6 +67,7 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSuccessMessage(null);
     const normalizedTitle = title.trim();
 
     if (!normalizedTitle) {
@@ -75,6 +81,7 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
     try {
       await createSubtask(taskId, normalizedTitle);
       setTitle('');
+      setSuccessMessage('Subtarefa criada.');
       refresh();
     } catch (error: unknown) {
       setActionError(
@@ -88,11 +95,15 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
   }
 
   async function handleToggle(subtask: Subtask): Promise<void> {
+    setSuccessMessage(null);
     setActionError(null);
     setMutatingId(subtask.id);
 
     try {
       await updateSubtask(taskId, subtask.id, { done: !subtask.done });
+      setSuccessMessage(
+        subtask.done ? 'Subtarefa reaberta.' : 'Subtarefa concluída.',
+      );
       refresh();
     } catch (error: unknown) {
       setActionError(
@@ -106,6 +117,7 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
   }
 
   function startEditing(subtask: Subtask): void {
+    setSuccessMessage(null);
     setActionError(null);
     setEditingId(subtask.id);
     setEditingTitle(subtask.title);
@@ -113,6 +125,7 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
 
   async function handleRename(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSuccessMessage(null);
 
     if (!editingId) {
       return;
@@ -131,6 +144,7 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
     try {
       await updateSubtask(taskId, editingId, { title: normalizedTitle });
       setEditingId(null);
+      setSuccessMessage('Subtarefa atualizada.');
       refresh();
     } catch (error: unknown) {
       setActionError(
@@ -144,31 +158,30 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
   }
 
   async function handleDelete(subtask: Subtask): Promise<void> {
-    const confirmed = window.confirm(
-      `Deseja excluir a subtarefa "${subtask.title}"?`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
     setActionError(null);
+    setSuccessMessage(null);
     setMutatingId(subtask.id);
 
     try {
       await deleteSubtask(taskId, subtask.id);
+      setState((current) =>
+        current.status === 'ready'
+          ? {
+              status: 'ready',
+              subtasks: current.subtasks.filter(
+                (item) => item.id !== subtask.id,
+              ),
+            }
+          : current,
+      );
+      setPendingDelete(null);
+      setSuccessMessage('Subtarefa excluída.');
 
       if (editingId === subtask.id) {
         setEditingId(null);
       }
 
       refresh();
-    } catch (error: unknown) {
-      setActionError(
-        error instanceof Error
-          ? error.message
-          : 'Não foi possível excluir a subtarefa',
-      );
     } finally {
       setMutatingId(null);
     }
@@ -229,6 +242,20 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
         </p>
       ) : null}
 
+      <SuccessMessage
+        message={successMessage}
+        onDismiss={() => setSuccessMessage(null)}
+      />
+      {pendingDelete ? (
+        <DeleteConfirmation
+          key={pendingDelete.id}
+          title="Excluir subtarefa"
+          description={`Excluir "${pendingDelete.title}"? Esta ação não pode ser desfeita.`}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => handleDelete(pendingDelete)}
+        />
+      ) : null}
+
       {state.status === 'loading' ? (
         <p className="mt-4 text-sm text-slate-600" aria-live="polite">
           Carregando subtarefas...
@@ -236,9 +263,14 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
       ) : null}
 
       {state.status === 'error' ? (
-        <p className="mt-4 text-sm text-red-700" role="alert">
-          {state.message}
-        </p>
+        <LoadError
+          message={state.message}
+          onRetry={() => {
+            setState({ status: 'loading' });
+            refresh();
+          }}
+          label="Recarregar subtarefas"
+        />
       ) : null}
 
       {state.status === 'ready' && state.subtasks.length === 0 ? (
@@ -335,7 +367,9 @@ export function SubtasksPanel({ taskId }: SubtasksPanelProps) {
                       className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={mutatingId !== null}
                       onClick={() => {
-                        void handleDelete(subtask);
+                        setActionError(null);
+                        setSuccessMessage(null);
+                        setPendingDelete(subtask);
                       }}
                       type="button"
                     >

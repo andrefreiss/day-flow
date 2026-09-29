@@ -41,6 +41,7 @@ export function useCategories() {
   }, [refreshKey]);
 
   const refresh = useCallback(() => {
+    setState({ status: 'loading' });
     setRefreshKey((value) => value + 1);
   }, []);
 

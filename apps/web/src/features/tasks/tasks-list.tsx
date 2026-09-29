@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { DeleteConfirmation } from '../../components/delete-confirmation.tsx';
+import { SuccessMessage } from '../../components/success-message.tsx';
+import { LoadError } from '../../components/load-error.tsx';
 import type { Category } from '../categories/categories-api.ts';
 import { SubtasksPanel } from '../subtasks/subtasks-panel.tsx';
 import {
@@ -9,6 +12,7 @@ import {
   type TaskPriority,
 } from './tasks-api.ts';
 import { TaskEditForm } from './task-edit-form.tsx';
+import { TaskFilters, type TaskFilterValues } from './task-filters.tsx';
 
 type TasksListProps = {
   categories: Category[];
@@ -44,6 +48,14 @@ function formatTaskTime(task: Task): string {
   }
 
   return `${task.startTime}–${task.endTime}`;
+}
+
+function normalizeSearch(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLocaleLowerCase('pt-BR')
+    .trim();
 }
 
 function TaskCategoryBadge({
@@ -85,6 +97,42 @@ export function TasksList({
     string | null
   >(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Task | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+  const [filters, setFilters] = useState<TaskFilterValues>({
+    query: '',
+    status: '',
+    priority: '',
+    categoryId: '',
+  });
+  const categoryId =
+    filters.categoryId === 'uncategorized' ||
+    categories.some((category) => category.id === filters.categoryId)
+      ? filters.categoryId
+      : '';
+  const query = normalizeSearch(filters.query);
+  const visibleTasks =
+    state.status === 'ready'
+      ? state.tasks.filter((task) => {
+          const matchesQuery = normalizeSearch(
+            `${task.title} ${task.description ?? ''}`,
+          ).includes(query);
+          const matchesStatus =
+            !filters.status || task.status === filters.status;
+          const matchesPriority =
+            !filters.priority || task.priority === filters.priority;
+          const matchesCategory =
+            !categoryId ||
+            (categoryId === 'uncategorized'
+              ? task.categoryId === null
+              : task.categoryId === categoryId);
+
+          return (
+            matchesQuery && matchesStatus && matchesPriority && matchesCategory
+          );
+        })
+      : [];
 
   useEffect(() => {
     let active = true;
@@ -114,9 +162,10 @@ export function TasksList({
     return () => {
       active = false;
     };
-  }, [date, refreshKey]);
+  }, [date, refreshKey, retryKey]);
 
   async function handleStatusChange(task: Task): Promise<void> {
+    setSuccessMessage(null);
     setActionError(null);
     setUpdatingTaskId(task.id);
     try {
@@ -124,7 +173,9 @@ export function TasksList({
         task.id,
         task.status === 'DONE' ? 'PENDING' : 'DONE',
       );
-
+      setSuccessMessage(
+        task.status === 'DONE' ? 'Tarefa reaberta.' : 'Tarefa concluída.',
+      );
       onChanged();
     } catch (error: unknown) {
       setActionError(
@@ -138,26 +189,24 @@ export function TasksList({
   }
 
   async function handleDelete(task: Task): Promise<void> {
-    const confirmed = window.confirm(
-      `Deseja realmente excluir a tarefa "${task.title}"?`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
     setActionError(null);
+    setSuccessMessage(null);
     setDeletingTaskId(task.id);
 
     try {
       await deleteTask(task.id);
-      onChanged();
-    } catch (error: unknown) {
-      setActionError(
-        error instanceof Error
-          ? error.message
-          : 'Não foi possível excluir a tarefa',
+      setState((current) =>
+        current.status === 'ready'
+          ? {
+              status: 'ready',
+              tasks: current.tasks.filter((item) => item.id !== task.id),
+            }
+          : current,
       );
+      setPendingDelete(null);
+      setEditingTaskId(null);
+      setSuccessMessage('Tarefa excluída.');
+      onChanged();
     } finally {
       setDeletingTaskId(null);
     }
@@ -172,6 +221,32 @@ export function TasksList({
         </p>
       </div>
 
+      <TaskFilters
+        categories={categories}
+        onChange={setFilters}
+        value={{ ...filters, categoryId }}
+      />
+
+      <SuccessMessage
+        message={successMessage}
+        onDismiss={() => setSuccessMessage(null)}
+      />
+      {pendingDelete ? (
+        <DeleteConfirmation
+          key={pendingDelete.id}
+          title="Excluir tarefa"
+          description={`Excluir "${pendingDelete.title}"? Todas as subtarefas também serão removidas. Esta ação não pode ser desfeita.`}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => handleDelete(pendingDelete)}
+        />
+      ) : null}
+
+      {state.status === 'ready' ? (
+        <p className="mt-4 text-sm text-slate-500" role="status">
+          Tarefas exibidas: {visibleTasks.length} de {state.tasks.length}.
+        </p>
+      ) : null}
+
       {actionError ? (
         <p className="mt-4 text-sm text-red-700" role="alert">
           {actionError}
@@ -185,20 +260,34 @@ export function TasksList({
       ) : null}
 
       {state.status === 'error' ? (
-        <p className="mt-6 text-red-700" role="alert">
-          {state.message}
-        </p>
+        <LoadError
+          message={state.message}
+          onRetry={() => {
+            setState({ status: 'loading' });
+            setRetryKey((value) => value + 1);
+          }}
+          label="Recarregar tarefas"
+        />
       ) : null}
 
       {state.status === 'ready' && state.tasks.length === 0 ? (
         <p className="mt-6 rounded-lg bg-slate-50 p-4 text-slate-600">
-          Nenhuma tarefa para hoje.
+          Nenhuma tarefa para a data selecionada.
         </p>
       ) : null}
 
-      {state.status === 'ready' && state.tasks.length > 0 ? (
+      {state.status === 'ready' &&
+      state.tasks.length > 0 &&
+      visibleTasks.length === 0 ? (
+        <p className="mt-6 rounded-lg bg-slate-50 p-4 text-slate-600">
+          Nenhuma tarefa corresponde aos filtros. Ajuste a busca ou limpe os
+          filtros para ver todas as tarefas do dia.
+        </p>
+      ) : null}
+
+      {state.status === 'ready' && visibleTasks.length > 0 ? (
         <ul className="mt-6 divide-y divide-slate-200">
-          {state.tasks.map((task) => (
+          {visibleTasks.map((task) => (
             <li className="py-4" key={task.id}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -296,7 +385,9 @@ export function TasksList({
                       updatingTaskId !== null || deletingTaskId !== null
                     }
                     onClick={() => {
-                      void handleDelete(task);
+                      setActionError(null);
+                      setSuccessMessage(null);
+                      setPendingDelete(task);
                     }}
                     type="button"
                   >
@@ -314,6 +405,7 @@ export function TasksList({
                   }}
                   onUpdated={() => {
                     setEditingTaskId(null);
+                    setSuccessMessage('Tarefa atualizada.');
                     onChanged();
                   }}
                   task={task}
