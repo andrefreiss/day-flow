@@ -308,7 +308,7 @@ arquivos `.env`. As chamadas dos fluxos testados são simuladas nos testes, para
 que a suíte use o mesmo ambiente localmente e no CI, sem depender da configuração
 pessoal de quem executa.
 
-A API tem testes unitários e 60 cenários end-to-end para autenticação, banco,
+A API tem testes unitários e 65 cenários end-to-end para autenticação, banco,
 categorias, tarefas, subtarefas, dashboard e saúde. Os E2E rodam num **schema
 separado** (`test`) do mesmo PostgreSQL, definido em `DATABASE_TEST_URL`. É por
 isso que podem limpar as tabelas sem apagar os dados de desenvolvimento.

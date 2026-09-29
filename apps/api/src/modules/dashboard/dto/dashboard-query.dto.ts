@@ -1,6 +1,6 @@
-import { Matches } from 'class-validator';
+import { IsCalendarDate } from '../../../common/is-calendar-date.js';
 
 export class DashboardQueryDto {
-  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsCalendarDate()
   date: string;
 }
