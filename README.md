@@ -15,7 +15,7 @@ deploy.
 - cadastro, login, sessão persistente e logout
 - rotas públicas e protegidas no frontend
 - resumo diário com total, concluídas, pendentes, atrasadas e próximas
-- criação, edição, conclusão, reabertura e exclusão de tarefas
+- criação, edição, remarcação, conclusão, reabertura e exclusão de tarefas
 - prioridades, descrição e horários opcionais
 - busca por título ou descrição e filtros combinados por status, prioridade e categoria
 - criação, edição e exclusão de categorias com cores
@@ -160,6 +160,10 @@ Criação, edição, conclusão e exclusão exibem mensagens de sucesso após a 
 da API. As mensagens podem ser dispensadas. Falhas no carregamento de tarefas,
 categorias, subtarefas, calendário e resumo oferecem um botão para tentar de
 novo, sem precisar atualizar a página inteira.
+
+A edição também permite remarcar a tarefa para outra data. A data só entra no
+`PATCH` quando muda, e a mensagem de sucesso informa o novo dia, já que a tarefa
+deixa a lista exibida. Subtarefas e o estado de conclusão são preservados.
 
 ## Categorias
 

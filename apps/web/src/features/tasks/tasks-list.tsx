@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { DeleteConfirmation } from '../../components/delete-confirmation.tsx';
 import { SuccessMessage } from '../../components/success-message.tsx';
 import { LoadError } from '../../components/load-error.tsx';
+import { formatLongDate } from '../../lib/date.ts';
 import type { Category } from '../categories/categories-api.ts';
 import { SubtasksPanel } from '../subtasks/subtasks-panel.tsx';
 import {
@@ -403,9 +404,13 @@ export function TasksList({
                   onCancel={() => {
                     setEditingTaskId(null);
                   }}
-                  onUpdated={() => {
+                  onUpdated={(updatedTask) => {
                     setEditingTaskId(null);
-                    setSuccessMessage('Tarefa atualizada.');
+                    setSuccessMessage(
+                      updatedTask.date.slice(0, 10) === task.date.slice(0, 10)
+                        ? 'Tarefa atualizada.'
+                        : `Tarefa remarcada para ${formatLongDate(updatedTask.date)}.`,
+                    );
                     onChanged();
                   }}
                   task={task}
