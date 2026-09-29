@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LoadError } from '../../components/load-error.tsx';
 import {
   addDays,
   endOfWeek,
@@ -114,21 +115,13 @@ export function WeekCalendar({
       ) : null}
 
       {state.status === 'error' ? (
-        <div className="mt-5 rounded-lg bg-red-50 p-4">
-          <p className="text-sm text-red-700" role="alert">
-            {state.message}
-          </p>
-          <button
-            className="mt-3 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
-            onClick={() => {
-              setState({ status: 'loading' });
-              setRetryKey((value) => value + 1);
-            }}
-            type="button"
-          >
-            Tentar novamente
-          </button>
-        </div>
+        <LoadError
+          message={state.message}
+          onRetry={() => {
+            setState({ status: 'loading' });
+            setRetryKey((value) => value + 1);
+          }}
+        />
       ) : null}
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
