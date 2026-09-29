@@ -1,13 +1,14 @@
-import { IsEnum, IsOptional, IsUUID, Matches } from 'class-validator';
+import { IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { IsCalendarDate } from '../../../common/is-calendar-date.js';
 import { TaskStatus } from '../../../generated/prisma/enums.js';
 
 export class TaskFiltersDto {
   @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsCalendarDate()
   from?: string;
 
   @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsCalendarDate()
   to?: string;
 
   @IsOptional()

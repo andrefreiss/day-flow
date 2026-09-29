@@ -113,6 +113,25 @@ describe('Tasks', () => {
       .expect(400);
   });
 
+  it.each(['2026-02-30', '2026-13-01'])(
+    'recusa a data inexistente %s ao criar',
+    async (date) => {
+      await request(server)
+        .post('/api/tasks')
+        .set('Cookie', dono)
+        .send({ title: 'Academia', date })
+        .expect(400);
+    },
+  );
+
+  it('recusa data inexistente ao editar', async () => {
+    await request(server)
+      .patch(`/api/tasks/${tarefaId}`)
+      .set('Cookie', dono)
+      .send({ date: '2026-02-30' })
+      .expect(400);
+  });
+
   it('aceita a própria categoria', async () => {
     await request(server)
       .post('/api/tasks')
@@ -190,6 +209,13 @@ describe('Tasks', () => {
   it('recusa filtro desconhecido', async () => {
     await request(server)
       .get('/api/tasks?statuss=DONE')
+      .set('Cookie', dono)
+      .expect(400);
+  });
+
+  it('recusa intervalo com data inexistente', async () => {
+    await request(server)
+      .get('/api/tasks?from=2026-09-01&to=2026-09-31')
       .set('Cookie', dono)
       .expect(400);
   });

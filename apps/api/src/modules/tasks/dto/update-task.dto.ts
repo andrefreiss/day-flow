@@ -7,6 +7,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { IsCalendarDate } from '../../../common/is-calendar-date.js';
 import { TaskPriority, TaskStatus } from '../../../generated/prisma/enums.js';
 
 export class UpdateTaskDto {
@@ -22,7 +23,7 @@ export class UpdateTaskDto {
   description?: string | null;
 
   @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsCalendarDate()
   date?: string;
 
   @IsOptional()

@@ -86,6 +86,13 @@ describe('Dashboard', () => {
       .expect(400);
   });
 
+  it('recusa data inexistente', async () => {
+    await request(server)
+      .get('/api/dashboard?date=2026-13-01')
+      .set('Cookie', dono)
+      .expect(400);
+  });
+
   it('recusa parâmetros desconhecidos', async () => {
     await request(server)
       .get('/api/dashboard?date=2026-09-17&extra=true')
