@@ -121,6 +121,10 @@ O frontend usa React Router para separar páginas públicas e protegidas. Ao
 recarregar a aplicação, a rota protegida consulta `GET /auth/me` antes de
 mostrar o conteúdo, evitando confiar apenas em estado armazenado no navegador.
 
+Se a sessão expirar com a página aberta, a primeira resposta `401` de qualquer
+chamada leva ao login com um aviso. O cliente HTTP compartilhado notifica a rota
+protegida, então nenhum painel precisa tratar a expiração por conta própria.
+
 A área protegida usa um layout responsivo compartilhado com acesso à rotina,
 ao calendário e às categorias. A página de rotina reúne o resumo diário,
 o formulário e a lista de tarefas, enquanto o calendário oferece uma visão

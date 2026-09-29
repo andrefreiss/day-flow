@@ -10,14 +10,37 @@ function getApiUrl(): string {
 
 const apiUrl = getApiUrl();
 
-export function apiFetch(path: string, init: RequestInit = {}) {
+type UnauthorizedListener = () => void;
+
+const unauthorizedListeners = new Set<UnauthorizedListener>();
+
+export function onUnauthorized(listener: UnauthorizedListener): () => void {
+  unauthorizedListeners.add(listener);
+
+  return () => {
+    unauthorizedListeners.delete(listener);
+  };
+}
+
+export async function apiFetch(
+  path: string,
+  init: RequestInit = {},
+): Promise<Response> {
   const headers = new Headers(init.headers);
 
   headers.set('Accept', 'application/json');
 
-  return fetch(`${apiUrl}${path}`, {
+  const response = await fetch(`${apiUrl}${path}`, {
     ...init,
     headers,
     credentials: 'include',
   });
+
+  if (response.status === 401) {
+    unauthorizedListeners.forEach((listener) => {
+      listener();
+    });
+  }
+
+  return response;
 }
