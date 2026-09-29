@@ -73,6 +73,33 @@ describe('TaskForm', () => {
     });
 
     expect(onCreated).toHaveBeenCalledOnce();
+    expect(screen.getByText('Tarefa "Estudar React" criada.')).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Dispensar mensagem de sucesso' }),
+    );
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('preserva o formulário e não anuncia sucesso quando o envio falha', async () => {
+    vi.mocked(createTask).mockRejectedValueOnce(
+      new Error('Falha ao criar tarefa'),
+    );
+    const onCreated = vi.fn();
+    render(
+      <TaskForm categories={[]} date="2026-09-25" onCreated={onCreated} />,
+    );
+    fireEvent.change(screen.getByLabelText('Título'), {
+      target: { value: 'Revisar calendário' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Criar tarefa' }));
+    expect((await screen.findByRole('alert')).textContent).toBe(
+      'Falha ao criar tarefa',
+    );
+    expect(screen.getByLabelText<HTMLInputElement>('Título').value).toBe(
+      'Revisar calendário',
+    );
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(onCreated).not.toHaveBeenCalled();
   });
 
   it('impede horário final sem horário inicial', async () => {

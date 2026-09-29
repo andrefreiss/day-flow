@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LoadError } from '../components/load-error.tsx';
 import { DateNavigation } from '../features/calendar/date-navigation.tsx';
 import { MonthCalendar } from '../features/calendar/month-calendar.tsx';
 import { WeekCalendar } from '../features/calendar/week-calendar.tsx';
@@ -24,7 +25,11 @@ export function CalendarPage() {
     startOfMonth(formatLocalDate(new Date())),
   );
   const [refreshKey, setRefreshKey] = useState(0);
-  const { categories, error: categoriesError } = useCategories();
+  const {
+    categories,
+    error: categoriesError,
+    refresh: refreshCategories,
+  } = useCategories();
 
   function handleReferenceDateChange(date: string): void {
     setReferenceDate(date);
@@ -50,10 +55,11 @@ export function CalendarPage() {
       </header>
 
       {categoriesError ? (
-        <p className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
-          {categoriesError}. As tarefas continuam disponíveis sem o filtro de
-          categorias.
-        </p>
+        <LoadError
+          message={`${categoriesError}. As tarefas continuam disponíveis.`}
+          onRetry={refreshCategories}
+          label="Recarregar categorias"
+        />
       ) : null}
 
       <DateNavigation

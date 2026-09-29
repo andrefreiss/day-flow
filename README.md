@@ -26,6 +26,8 @@ deploy.
 - visão semanal com horários, tarefas e progresso de domingo a sábado
 - alternância entre mês, semana e dia mantendo a data selecionada
 - validação de formulários e tratamento dos estados de carregamento e erro
+- confirmação de exclusão na página para tarefas, categorias e subtarefas
+- mensagens de sucesso e nova tentativa nos painéis que falharem ao carregar
 
 ## Stack
 
@@ -145,6 +147,16 @@ usa as tarefas já carregadas, sem novas consultas à API, e preserva sua ordem.
 Os totais do resumo e do calendário não são filtrados. Ao trocar a data ou sair
 da página, os filtros da lista são reiniciados.
 
+As exclusões pedem confirmação na própria página e explicam o que será removido.
+Cancelar ou pressionar Escape antes do envio preserva o item. Durante o envio,
+os botões da confirmação ficam bloqueados para evitar solicitações duplicadas.
+Se houver erro, a confirmação permanece aberta e permite uma nova tentativa.
+
+Criação, edição, conclusão e exclusão exibem mensagens de sucesso após a resposta
+da API. As mensagens podem ser dispensadas. Falhas no carregamento de tarefas,
+categorias, subtarefas, calendário e resumo oferecem um botão para tentar de
+novo, sem precisar atualizar a página inteira.
+
 ## Categorias
 
 Categorias pertencem ao usuário autenticado, têm nome único por usuário e uma
@@ -260,6 +272,7 @@ apps/
     src/features/dashboard/    consumo do resumo diário
     src/features/subtasks/     gerenciamento de subtarefas
     src/features/tasks/        formulários e lista de tarefas
+    src/components/            confirmações e mensagens compartilhadas
     src/layouts/                navegação e estrutura das páginas protegidas
     src/pages/                 páginas da aplicação
 .github/workflows/ci.yml       pipeline de integração contínua

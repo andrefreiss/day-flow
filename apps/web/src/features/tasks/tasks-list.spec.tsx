@@ -8,7 +8,12 @@ import {
   waitFor,
 } from '@testing-library/react';
 import type { Category } from '../categories/categories-api.ts';
-import { getTasks, updateTaskStatus, type Task } from './tasks-api.ts';
+import {
+  deleteTask,
+  getTasks,
+  updateTaskStatus,
+  type Task,
+} from './tasks-api.ts';
 import { TasksList } from './tasks-list.tsx';
 
 vi.mock('./tasks-api.ts', () => ({
@@ -82,6 +87,51 @@ function changeFilter(label: string, value: string): void {
 }
 
 describe('TasksList filters', () => {
+  it('exige confirmação para excluir e preserva a tarefa se cancelar ou houver erro', async () => {
+    vi.mocked(getTasks).mockResolvedValue([task('one', 'Revisar calendário')]);
+    vi.mocked(deleteTask)
+      .mockRejectedValueOnce(new Error('Falha ao excluir'))
+      .mockResolvedValueOnce();
+    render(<TaskList />);
+    await screen.findByText('Revisar calendário');
+    fireEvent.click(screen.getByRole('button', { name: 'Excluir' }));
+    expect(
+      screen.getByText(/Todas as subtarefas também serão removidas/),
+    ).toBeTruthy();
+    expect(deleteTask).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(screen.queryByRole('group', { name: 'Excluir tarefa' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Excluir' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar exclusão' }));
+    expect((await screen.findByRole('alert')).textContent).toBe(
+      'Falha ao excluir',
+    );
+    expect(screen.getByText('Revisar calendário')).toBeTruthy();
+    vi.mocked(getTasks).mockResolvedValue([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar exclusão' }));
+    await screen.findByText('Tarefa excluída.');
+    expect(deleteTask).toHaveBeenLastCalledWith('one');
+    expect(screen.queryByRole('group', { name: 'Excluir tarefa' })).toBeNull();
+    expect(screen.queryByText('Revisar calendário')).toBeNull();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Dispensar mensagem de sucesso' }),
+    );
+    expect(screen.queryByText('Tarefa excluída.')).toBeNull();
+  });
+
+  it('recupera um carregamento com falha sem apagar os filtros', async () => {
+    vi.mocked(getTasks)
+      .mockRejectedValueOnce(new Error('Falha de conexão'))
+      .mockResolvedValueOnce(tasks);
+    render(<TaskList />);
+    await screen.findByRole('alert');
+    changeFilter('Buscar tarefas', 'React');
+    fireEvent.click(screen.getByRole('button', { name: 'Recarregar tarefas' }));
+    await screen.findByText('Estudar React');
+    expect(screen.getByText('Tarefas exibidas: 1 de 4.')).toBeTruthy();
+    expect(getTasks).toHaveBeenCalledTimes(2);
+  });
+
   it('busca por título e descrição ignorando acentos, espaços externos e maiúsculas sem consultar a API novamente', async () => {
     vi.mocked(getTasks).mockResolvedValue(tasks);
     render(<TaskList />);

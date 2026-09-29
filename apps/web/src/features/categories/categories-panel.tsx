@@ -1,4 +1,7 @@
 import { useState, type FormEvent } from 'react';
+import { DeleteConfirmation } from '../../components/delete-confirmation.tsx';
+import { SuccessMessage } from '../../components/success-message.tsx';
+import { LoadError } from '../../components/load-error.tsx';
 import {
   createCategory,
   deleteCategory,
@@ -29,9 +32,12 @@ export function CategoriesPanel({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSuccessMessage(null);
     const normalizedName = name.trim();
 
     if (!normalizedName) {
@@ -46,6 +52,7 @@ export function CategoriesPanel({
       await createCategory({ name: normalizedName, color });
       setName('');
       setColor(defaultColor);
+      setSuccessMessage('Categoria criada.');
       onChanged();
     } catch (requestError: unknown) {
       setActionError(
@@ -59,6 +66,7 @@ export function CategoriesPanel({
   }
 
   function startEditing(category: Category): void {
+    setSuccessMessage(null);
     setActionError(null);
     setEditingId(category.id);
     setEditingName(category.name);
@@ -67,6 +75,7 @@ export function CategoriesPanel({
 
   async function handleUpdate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSuccessMessage(null);
 
     if (!editingId) {
       return;
@@ -88,6 +97,7 @@ export function CategoriesPanel({
         color: editingColor,
       });
       setEditingId(null);
+      setSuccessMessage('Categoria atualizada.');
       onChanged();
     } catch (requestError: unknown) {
       setActionError(
@@ -101,31 +111,20 @@ export function CategoriesPanel({
   }
 
   async function handleDelete(category: Category): Promise<void> {
-    const confirmed = window.confirm(
-      `Deseja excluir a categoria "${category.name}"? As tarefas serão mantidas sem categoria.`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
     setActionError(null);
+    setSuccessMessage(null);
     setDeletingId(category.id);
 
     try {
       await deleteCategory(category.id);
+      setPendingDelete(null);
+      setSuccessMessage('Categoria excluída. As tarefas foram mantidas.');
 
       if (editingId === category.id) {
         setEditingId(null);
       }
 
       onChanged();
-    } catch (requestError: unknown) {
-      setActionError(
-        requestError instanceof Error
-          ? requestError.message
-          : 'Não foi possível excluir a categoria',
-      );
     } finally {
       setDeletingId(null);
     }
@@ -196,6 +195,20 @@ export function CategoriesPanel({
         </p>
       ) : null}
 
+      <SuccessMessage
+        message={successMessage}
+        onDismiss={() => setSuccessMessage(null)}
+      />
+      {pendingDelete ? (
+        <DeleteConfirmation
+          key={pendingDelete.id}
+          title="Excluir categoria"
+          description={`Excluir "${pendingDelete.name}"? As tarefas serão mantidas sem categoria. Esta ação não pode ser desfeita.`}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => handleDelete(pendingDelete)}
+        />
+      ) : null}
+
       {isLoading ? (
         <p className="mt-5 text-sm text-slate-600" aria-live="polite">
           Carregando categorias...
@@ -203,9 +216,11 @@ export function CategoriesPanel({
       ) : null}
 
       {error ? (
-        <p className="mt-5 text-sm text-red-700" role="alert">
-          {error}
-        </p>
+        <LoadError
+          message={error}
+          onRetry={onChanged}
+          label="Recarregar categorias"
+        />
       ) : null}
 
       {!isLoading && !error && categories.length === 0 ? (
@@ -314,7 +329,9 @@ export function CategoriesPanel({
                       className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={deletingId !== null || isSubmitting}
                       onClick={() => {
-                        void handleDelete(category);
+                        setActionError(null);
+                        setSuccessMessage(null);
+                        setPendingDelete(category);
                       }}
                       type="button"
                     >
