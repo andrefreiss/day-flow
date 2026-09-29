@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { fromDateColumn, toDateColumn } from '../../common/date-column.js';
 import { PrismaService } from '../../database/prisma.service.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { TaskStatus } from '../../generated/prisma/enums.js';
@@ -11,10 +12,6 @@ import { TaskFiltersDto } from './dto/task-filters.dto.js';
 import { UpdateTaskDto } from './dto/update-task.dto.js';
 
 const omitOwner = { userId: true };
-
-function toDateColumn(date: string): Date {
-  return new Date(`${date}T00:00:00.000Z`);
-}
 
 @Injectable()
 export class TasksService {
@@ -108,7 +105,7 @@ export class TasksService {
   }
 
   private toResponse<T extends { date: Date }>(task: T) {
-    return { ...task, date: task.date.toISOString().slice(0, 10) };
+    return { ...task, date: fromDateColumn(task.date) };
   }
 
   private buildDateRange(
