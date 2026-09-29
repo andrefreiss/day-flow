@@ -11,6 +11,7 @@ import type { Category } from '../categories/categories-api.ts';
 import {
   deleteTask,
   getTasks,
+  updateTask,
   updateTaskStatus,
   type Task,
 } from './tasks-api.ts';
@@ -230,6 +231,40 @@ describe('TasksList filters', () => {
     ).toBe('PENDING');
     changeFilter('Filtrar por status', 'DONE');
     expect(screen.getByRole('button', { name: 'Reabrir' })).toBeTruthy();
+  });
+
+  it('explica que a tarefa remarcada saiu da lista do dia', async () => {
+    const original = task('moved', 'Consulta médica');
+    const rescheduled: Task = { ...original, date: '2026-10-04' };
+    vi.mocked(getTasks)
+      .mockResolvedValueOnce([original])
+      .mockResolvedValueOnce([]);
+    vi.mocked(updateTask).mockResolvedValue(rescheduled);
+    render(<TaskList />);
+    await screen.findByText('Consulta médica');
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
+    fireEvent.change(screen.getByLabelText('Data'), {
+      target: { value: '2026-10-04' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+    expect(
+      (await screen.findByText(/^Tarefa remarcada para/)).textContent,
+    ).toBe('Tarefa remarcada para domingo, 4 de outubro de 2026.');
+    await screen.findByText('Nenhuma tarefa para a data selecionada.');
+  });
+
+  it('mantém a mensagem de atualização quando a data não muda', async () => {
+    const original = task('same', 'Consulta médica');
+    vi.mocked(getTasks).mockResolvedValue([original]);
+    vi.mocked(updateTask).mockResolvedValue({ ...original, title: 'Dentista' });
+    render(<TaskList />);
+    await screen.findByText('Consulta médica');
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
+    fireEvent.change(screen.getByLabelText('Título'), {
+      target: { value: 'Dentista' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+    await screen.findByText('Tarefa atualizada.');
   });
 
   it('preserva a tarefa filtrada quando a atualização falha', async () => {

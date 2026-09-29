@@ -6,7 +6,7 @@ type TaskEditFormProps = {
   categories: Category[];
   task: Task;
   onCancel: () => void;
-  onUpdated: () => void;
+  onUpdated: (task: Task) => void;
 };
 
 export function TaskEditForm({
@@ -18,6 +18,8 @@ export function TaskEditForm({
   const fieldId = useId();
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? '');
+  const currentDate = task.date.slice(0, 10);
+  const [date, setDate] = useState(currentDate);
   const [startTime, setStartTime] = useState(task.startTime ?? '');
   const [endTime, setEndTime] = useState(task.endTime ?? '');
   const [priority, setPriority] = useState<TaskPriority>(task.priority);
@@ -38,6 +40,11 @@ export function TaskEditForm({
       return;
     }
 
+    if (!date) {
+      setErrorMessage('Informe a data da tarefa');
+      return;
+    }
+
     if (endTime && !startTime) {
       setErrorMessage('O horário final exige um horário inicial');
       return;
@@ -52,16 +59,17 @@ export function TaskEditForm({
     setIsSubmitting(true);
 
     try {
-      await updateTask(task.id, {
+      const updatedTask = await updateTask(task.id, {
         title: normalizedTitle,
         description: description.trim() || null,
+        date: date === currentDate ? undefined : date,
         startTime: startTime || null,
         endTime: endTime || null,
         priority,
         categoryId: selectedCategoryId || null,
       });
 
-      onUpdated();
+      onUpdated(updatedTask);
     } catch (error: unknown) {
       setErrorMessage(
         error instanceof Error
@@ -121,6 +129,26 @@ export function TaskEditForm({
               setDescription(event.target.value);
             }}
             value={description}
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label
+            className="block text-sm font-medium"
+            htmlFor={`${fieldId}-date`}
+          >
+            Data
+          </label>
+          <input
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 sm:w-auto"
+            disabled={isSubmitting}
+            id={`${fieldId}-date`}
+            onChange={(event) => {
+              setDate(event.target.value);
+            }}
+            required
+            type="date"
+            value={date}
           />
         </div>
 
