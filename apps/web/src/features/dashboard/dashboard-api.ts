@@ -1,4 +1,6 @@
 import { apiFetch } from '../../lib/api.ts';
+import { isLocalDate } from '../../lib/date.ts';
+import { isRecord } from '../../lib/guards.ts';
 
 export type DashboardSummary = {
   date: string;
@@ -12,10 +14,6 @@ export type DashboardSummary = {
   progress: number;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
 function isNonNegativeInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0;
 }
@@ -23,7 +21,7 @@ function isNonNegativeInteger(value: unknown): value is number {
 function isDashboardSummary(value: unknown): value is DashboardSummary {
   return (
     isRecord(value) &&
-    typeof value.date === 'string' &&
+    isLocalDate(value.date) &&
     isRecord(value.today) &&
     isNonNegativeInteger(value.today.total) &&
     isNonNegativeInteger(value.today.completed) &&

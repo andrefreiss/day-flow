@@ -1,4 +1,5 @@
 import { apiFetch } from '../../lib/api.ts';
+import { isRecord } from '../../lib/guards.ts';
 
 export type User = {
   id: string;
@@ -17,10 +18,6 @@ export type RegisterCredentials = {
   email: string;
   password: string;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 function isUser(value: unknown): value is User {
   return (

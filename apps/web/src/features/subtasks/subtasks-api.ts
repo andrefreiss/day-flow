@@ -1,4 +1,5 @@
 import { apiFetch } from '../../lib/api.ts';
+import { isRecord } from '../../lib/guards.ts';
 
 export type Subtask = {
   id: string;
@@ -13,10 +14,6 @@ export type UpdateSubtaskInput = {
   title?: string;
   done?: boolean;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 function isSubtask(value: unknown): value is Subtask {
   return (

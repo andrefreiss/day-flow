@@ -73,15 +73,14 @@ export function MonthCalendar({
     }
 
     for (const task of state.tasks) {
-      const date = task.date.slice(0, 10);
-      const current = result.get(date) ?? { completed: 0, total: 0 };
+      const current = result.get(task.date) ?? { completed: 0, total: 0 };
       current.total += 1;
 
       if (task.status === 'DONE') {
         current.completed += 1;
       }
 
-      result.set(date, current);
+      result.set(task.date, current);
     }
 
     return result;

@@ -25,7 +25,7 @@ function task(overrides: Partial<Task> = {}): Task {
   return {
     id: 'task-id',
     title: 'Estudar TypeScript',
-    date: '2027-01-01T00:00:00.000Z',
+    date: '2027-01-01',
     description: null,
     categoryId: null,
     startTime: '09:00',

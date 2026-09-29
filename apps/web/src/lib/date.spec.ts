@@ -5,6 +5,7 @@ import {
   endOfMonth,
   endOfWeek,
   formatLocalDate,
+  isLocalDate,
   parseLocalDate,
   startOfMonth,
   startOfWeek,
@@ -14,6 +15,13 @@ describe('date utilities', () => {
   it('formata a data sem converter o fuso horário', () => {
     expect(formatLocalDate(new Date(2026, 8, 25))).toBe('2026-09-25');
     expect(parseLocalDate('2026-09-25').getDate()).toBe(25);
+  });
+
+  it('reconhece apenas datas no formato YYYY-MM-DD', () => {
+    expect(isLocalDate('2026-09-25')).toBe(true);
+    expect(isLocalDate('2026-09-25T00:00:00.000Z')).toBe(false);
+    expect(isLocalDate('25/09/2026')).toBe(false);
+    expect(isLocalDate(null)).toBe(false);
   });
 
   it('navega entre dias e respeita anos bissextos', () => {

@@ -73,10 +73,9 @@ export function WeekCalendar({
 
   if (state.status === 'ready') {
     for (const task of state.tasks) {
-      const date = task.date.slice(0, 10);
-      const tasks = tasksByDate.get(date) ?? [];
+      const tasks = tasksByDate.get(task.date) ?? [];
       tasks.push(task);
-      tasksByDate.set(date, tasks);
+      tasksByDate.set(task.date, tasks);
     }
   }
 
