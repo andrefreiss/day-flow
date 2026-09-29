@@ -40,9 +40,6 @@ export class AuthService {
       if (isUniqueViolation(error)) {
         throw new ConflictException('Email já cadastrado');
       }
-      {
-        throw new ConflictException('Email já cadastrado');
-      }
 
       throw error;
     }
