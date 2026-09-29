@@ -200,10 +200,14 @@ A entrada e os filtros usam `YYYY-MM-DD`, e o banco guarda `date` como uma
 coluna de data pura. Os horários são texto `HH:mm`: "academia às 07:00" continua
 às 07:00 independentemente do fuso de quem abre o aplicativo.
 
-Na resposta JSON, o driver pode serializar a data como um instante ISO. Por isso
-o frontend usa somente a parte `YYYY-MM-DD` e cria datas locais pelos campos de
-ano, mês e dia. Interpretar diretamente `2026-09-20T00:00:00.000Z` renderizaria
-19 de setembro em fusos a oeste de Greenwich.
+O Prisma lê a coluna `date` como um instante à meia-noite UTC. Se a API
+devolvesse esse valor, `2026-09-20T00:00:00.000Z` apareceria como 19 de setembro
+em fusos a oeste de Greenwich. Por isso o serviço converte a data para
+`YYYY-MM-DD` antes de responder.
+
+O frontend trata esse formato como contrato: a validação da resposta recusa
+qualquer outro, e as datas locais são montadas pelos campos de ano, mês e dia,
+sem passar por `new Date("YYYY-MM-DD")`, que também seria interpretado como UTC.
 
 ### Categoria de outro usuário
 
@@ -269,19 +273,21 @@ o `postinstall` e o `build` o recriam a partir do schema.
 apps/
   api/                         API NestJS
     prisma/                    schema e migrations
+    src/common/                validação e conversão de datas
     src/config/                configuração e validação do ambiente
     src/database/              conexão com o Postgres
     src/modules/               módulos de domínio
     test/                      testes end-to-end
   web/                         aplicação React
     src/features/auth/         autenticação e proteção de rotas
-    src/features/calendar/     navegação e calendário mensal
+    src/features/calendar/     navegação e calendários mensal e semanal
     src/features/categories/   gerenciamento de categorias
     src/features/dashboard/    consumo do resumo diário
     src/features/subtasks/     gerenciamento de subtarefas
     src/features/tasks/        formulários e lista de tarefas
     src/components/            confirmações e mensagens compartilhadas
-    src/layouts/                navegação e estrutura das páginas protegidas
+    src/layouts/               navegação e estrutura das páginas protegidas
+    src/lib/                   cliente HTTP, datas e validação de respostas
     src/pages/                 páginas da aplicação
 .github/workflows/ci.yml       pipeline de integração contínua
 tsconfig.base.json             TypeScript compartilhado
