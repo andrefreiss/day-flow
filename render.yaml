@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: day-flow-api
+    runtime: node
+    plan: free
+    region: virginia
+    buildCommand: corepack enable pnpm && pnpm install --frozen-lockfile && pnpm --filter @day-flow/api build && pnpm --filter @day-flow/api db:deploy
+    startCommand: node apps/api/dist/main.js
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    buildFilter:
+      paths:
+        - apps/api/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - render.yaml
+        - .nvmrc
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PREFIX
+        value: api
+      - key: DATABASE_URL
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN_SECONDS
+        value: '604800'

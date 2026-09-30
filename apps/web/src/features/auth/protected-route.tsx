@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router';
+import { SessionCheck } from '../../components/session-check.tsx';
 import { onUnauthorized } from '../../lib/api.ts';
 import { getCurrentUser, type User } from './auth-api.ts';
 
@@ -49,7 +50,7 @@ export function ProtectedRoute() {
   );
 
   if (session.status === 'loading') {
-    return <p className="p-6">Verificando sessão...</p>;
+    return <SessionCheck />;
   }
 
   if (session.status === 'error') {
