@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: virginia
-    buildCommand: corepack enable pnpm && pnpm install --frozen-lockfile && pnpm --filter @day-flow/api build && pnpm --filter @day-flow/api db:deploy
+    buildCommand: npx --yes pnpm@12.3.4 install --frozen-lockfile && npx --yes pnpm@12.3.4 --filter @day-flow/api build && npx --yes pnpm@12.3.4 --filter @day-flow/api db:deploy
     startCommand: node apps/api/dist/main.js
     healthCheckPath: /api/health
     autoDeployTrigger: checksPass
