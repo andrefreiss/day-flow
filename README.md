@@ -349,9 +349,53 @@ O workflow `.github/workflows/ci.yml` roda em todo pull request e em pushes para
 6. testes end-to-end
 7. build completo
 
+## Deploy
+
+| Parte    | Serviço | Configuração                 |
+| -------- | ------- | ---------------------------- |
+| Frontend | Vercel  | `apps/web/vercel.json`       |
+| API      | Render  | `render.yaml`                |
+| Banco    | Neon    | PostgreSQL 18, URL no Render |
+
+### Um único site para o navegador
+
+A sessão depende de um cookie `sameSite=lax`. Se o frontend e a API ficassem em
+domínios diferentes, o navegador trataria a API como outro site e não enviaria o
+cookie nas chamadas `fetch`. Trocar para `sameSite=none` não resolveria:
+Safari e Firefox bloqueiam cookies de terceiros.
+
+Por isso a Vercel repassa `/api/*` para a API no Render. O navegador conversa
+apenas com o domínio da Vercel, o cookie continua sendo do próprio site e o
+frontend usa `VITE_API_URL=/api`. As demais rotas são reescritas para
+`index.html`, que o React Router precisa ao recarregar uma página interna.
+
+Como respostas repassadas podem ser guardadas pela CDN quando trazem cabeçalhos
+de cache, a API envia `Cache-Control: no-store` em todas as respostas. Os dados
+de um usuário nunca ficam num cache compartilhado.
+
+### API no Render
+
+O `render.yaml` descreve o serviço: instala as dependências, gera o build,
+aplica as migrations com `prisma migrate deploy` e inicia `dist/main.js`. As
+migrations rodam no build porque o plano gratuito não tem etapa de pré-deploy.
+O deploy só acontece depois que o CI passa, e alterações apenas no frontend não
+disparam um novo build da API.
+
+O `JWT_SECRET` é gerado pelo próprio Render. `DATABASE_URL` e `WEB_ORIGIN` são
+informados no painel na criação do serviço.
+
+No plano gratuito, a API é desligada após 15 minutos sem acesso e leva cerca de
+um minuto para voltar. Enquanto isso, a tela de verificação de sessão avisa que
+o servidor está iniciando.
+
+### Frontend na Vercel
+
+O projeto usa `apps/web` como diretório raiz e a variável `VITE_API_URL=/api`.
+A Vercel ainda não reconhece o pnpm 12, então a instalação e o build chamam a
+versão fixada do pnpm diretamente.
+
 ## Próximos passos
 
 - ampliar os testes dos fluxos de autenticação, categorias e subtarefas no frontend
 - refinar responsividade, feedback visual e acessibilidade
-- preparar ambientes e documentação de deploy
 - adicionar observabilidade e tratamento de erros de produção
