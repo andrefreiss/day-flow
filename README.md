@@ -3,17 +3,25 @@
 Aplicação web para organização da rotina diária: tarefas com horário, subtarefas,
 categorias, visualização em calendário e um painel com o andamento do dia.
 
+**Acesse: [day-flow-delta.vercel.app](https://day-flow-delta.vercel.app)**
+
+A API roda num plano gratuito e é desligada após alguns minutos sem uso, então
+o primeiro acesso pode levar até um minuto enquanto o servidor inicia.
+
+![Demonstração do Day Flow: concluindo e criando tarefas, calendário mensal e semanal](docs/demo.gif)
+
 ## Status
 
-MVP full-stack funcional em desenvolvimento. A API e a interface web já cobrem
-o fluxo principal de autenticação, organização e acompanhamento da rotina. As
-próximas etapas são refinamento visual, ampliação dos testes e preparação para
-deploy.
+MVP completo e publicado. A API e a interface web cobrem autenticação, tarefas,
+subtarefas, categorias, calendário e o resumo do dia, com CI a cada pull request
+e deploy automático a cada merge na `main`.
 
 ## Funcionalidades
 
 - cadastro, login, sessão persistente e logout
 - rotas públicas e protegidas no frontend
+- retorno ao login com aviso quando a sessão expira durante o uso
+- aviso de servidor iniciando quando a verificação da sessão demora
 - resumo diário com total, concluídas, pendentes, atrasadas e próximas
 - criação, edição, remarcação, conclusão, reabertura e exclusão de tarefas
 - prioridades, descrição e horários opcionais
@@ -289,7 +297,9 @@ apps/
     src/layouts/               navegação e estrutura das páginas protegidas
     src/lib/                   cliente HTTP, datas e validação de respostas
     src/pages/                 páginas da aplicação
+docs/                          demonstração usada neste README
 .github/workflows/ci.yml       pipeline de integração contínua
+render.yaml                    serviço da API no Render
 tsconfig.base.json             TypeScript compartilhado
 eslint.config.js               regras de lint do monorepo
 docker-compose.yml             PostgreSQL de desenvolvimento
@@ -322,7 +332,7 @@ arquivos `.env`. As chamadas dos fluxos testados são simuladas nos testes, para
 que a suíte use o mesmo ambiente localmente e no CI, sem depender da configuração
 pessoal de quem executa.
 
-A API tem testes unitários e 65 cenários end-to-end para autenticação, banco,
+A API tem testes unitários e 66 cenários end-to-end para autenticação, banco,
 categorias, tarefas, subtarefas, dashboard e saúde. Os E2E rodam num **schema
 separado** (`test`) do mesmo PostgreSQL, definido em `DATABASE_TEST_URL`. É por
 isso que podem limpar as tabelas sem apagar os dados de desenvolvimento.
@@ -351,11 +361,16 @@ O workflow `.github/workflows/ci.yml` roda em todo pull request e em pushes para
 
 ## Deploy
 
-| Parte    | Serviço | Configuração                 |
-| -------- | ------- | ---------------------------- |
-| Frontend | Vercel  | `apps/web/vercel.json`       |
-| API      | Render  | `render.yaml`                |
-| Banco    | Neon    | PostgreSQL 18, URL no Render |
+| Parte    | Serviço | Endereço                                                                  | Configuração                 |
+| -------- | ------- | ------------------------------------------------------------------------- | ---------------------------- |
+| Frontend | Vercel  | [day-flow-delta.vercel.app](https://day-flow-delta.vercel.app)            | `apps/web/vercel.json`       |
+| API      | Render  | [day-flow-api.onrender.com](https://day-flow-api.onrender.com/api/health) | `render.yaml`                |
+| Banco    | Neon    | —                                                                         | PostgreSQL 18, URL no Render |
+
+A Vercel ainda não reconhece o pnpm 12, e o Render traz um pnpm próprio numa
+pasta somente leitura, que o Corepack não consegue substituir. Por isso os
+comandos de instalação e build chamam a versão fixada diretamente, com
+`npx pnpm@12.3.4`, sem depender do pnpm instalado em cada ambiente.
 
 ### Um único site para o navegador
 
@@ -391,8 +406,7 @@ o servidor está iniciando.
 ### Frontend na Vercel
 
 O projeto usa `apps/web` como diretório raiz e a variável `VITE_API_URL=/api`.
-A Vercel ainda não reconhece o pnpm 12, então a instalação e o build chamam a
-versão fixada do pnpm diretamente.
+A instalação filtra apenas as dependências do frontend.
 
 ## Próximos passos
 
