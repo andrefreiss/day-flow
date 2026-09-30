@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router';
+import { SessionCheck } from '../../components/session-check.tsx';
 import { getCurrentUser } from './auth-api.ts';
 
 type GuestState = 'loading' | 'guest' | 'authenticated' | 'error';
@@ -32,7 +33,7 @@ export function GuestRoute() {
   }, []);
 
   if (status === 'loading') {
-    return <p className="p-6">Verificando sessão...</p>;
+    return <SessionCheck />;
   }
 
   if (status === 'error') {
