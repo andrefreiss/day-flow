@@ -104,6 +104,22 @@ describe('Auth', () => {
     expect(response.body).toMatchObject({ email: credenciais.email });
   });
 
+  it('proíbe cache das respostas autenticadas', async () => {
+    const login = await request(server)
+      .post('/api/auth/login')
+      .send({ email: credenciais.email, password: credenciais.password })
+      .expect(200);
+
+    const cookies = login.headers['set-cookie'] as unknown as string[];
+
+    const response = await request(server)
+      .get('/api/auth/me')
+      .set('Cookie', cookies)
+      .expect(200);
+
+    expect(response.headers['cache-control']).toBe('no-store');
+  });
+
   it('invalida a sessão no logout', async () => {
     const login = await request(server)
       .post('/api/auth/login')
